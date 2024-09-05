@@ -8,19 +8,28 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import RepresentanteRegistroForm, RepresentanteLoginForm
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 
 def logout_view(request):
     logout(request)
     return redirect('home')
+
 def registro_representante(request):
-  if request.method == 'POST':
-    form = RepresentanteRegistroForm(request.POST, request.FILES)
-    if form.is_valid():
-      form.save()
-      return redirect('login')  # Redireciona para a página de login após o registro
-  else:
-    form = RepresentanteRegistroForm()
-  return render(request, 'html/registro.html', {'form': form})
+    if request.method == 'POST':
+        form = RepresentanteRegistroForm(request.POST, request.FILES)
+        if form.is_valid():
+            representante = form.save()  # Salva o representante
+            group = Group.objects.get(name='Representante Esportivo')  # Obtenha o grupo
+
+            # Adiciona o grupo ao usuário associado
+            representante.user.groups.add(group)
+            
+            return redirect('login')  # Redireciona após o sucesso
+    else:
+        form = RepresentanteRegistroForm()
+    
+    return render(request, 'html/registro.html', {'form': form})
 
 def login_representante(request):
   if request.method == 'POST':
