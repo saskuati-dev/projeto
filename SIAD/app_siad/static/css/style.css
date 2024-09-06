@@ -13,6 +13,7 @@
     max-width: 800px;
     text-align: center;
     margin: 0 auto;
+    margin-top: 10px ;
 }
 
 .container h1 {
@@ -138,7 +139,7 @@ nav li:first-child {
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 button {
@@ -187,4 +188,40 @@ button:hover {
 .responsive-image {
     max-width: 100%; 
     height: auto; 
+}
+
+.container p {
+    text-align: left;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.container ul, ol{
+    text-align: left;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.gaveta-content {
+    display: none; /* Inicialmente escondido */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-top-style:hidden;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.gaveta-header {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 10;
+    border-radius: 10px;
+}
+.gaveta-header.active {
+    background-color: #ccc;
 }

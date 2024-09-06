@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from .forms import RepresentanteLoginForm, RepresentanteRegistroForm
 import logging
-
+import os
+from django.conf import settings
 def logout_view(request):
     logout(request)
     return redirect('home')
@@ -82,3 +83,40 @@ def editais(request):
 def sobre(request):
     return render(request, 'html/sobre.html')
 
+
+
+
+
+
+def editais(request):
+    # Caminho para a pasta de eventos
+    eventos_path = os.path.join(settings.MEDIA_ROOT, 'eventos')
+
+    eventos = []
+    if os.path.exists(eventos_path):
+        # Para cada diretório dentro de 'eventos' (que representa um evento)
+        for nome_evento in sorted(os.listdir(eventos_path), key=lambda x: os.path.getmtime(os.path.join(eventos_path, x)), reverse=True):
+            evento_path = os.path.join(eventos_path, nome_evento)
+
+            # Verifica se é um diretório (evento)
+            if os.path.isdir(evento_path):
+                # Lista os arquivos de editais dentro da pasta do evento, ordenados por data de modificação
+                editais = sorted(
+                    [edital for edital in os.listdir(evento_path) if os.path.isfile(os.path.join(evento_path, edital))],
+                    key=lambda x: os.path.getmtime(os.path.join(evento_path, x)),
+                    reverse=True
+                )
+
+                # Adiciona o evento e seus editais à lista de eventos
+                eventos.append({
+                    'nome': nome_evento,  # Nome do evento
+                    'editais': [
+                        {
+                            'nome': edital,
+                            'url': os.path.join(settings.MEDIA_URL, 'eventos', nome_evento, edital)
+                        }
+                        for edital in editais
+                    ],
+                })
+
+    return render(request, 'html/editais.html', {'eventos': eventos})
