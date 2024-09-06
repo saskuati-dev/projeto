@@ -1,15 +1,10 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
+from django.http import FileResponse
 from .forms import RepresentanteLoginForm, RepresentanteRegistroForm
 import logging
-from django.http import FileResponse
-from django.shortcuts import render
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
-from .forms import RepresentanteRegistroForm, RepresentanteLoginForm
-from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
 
 def logout_view(request):
     logout(request)
@@ -19,17 +14,17 @@ def registro_representante(request):
     if request.method == 'POST':
         form = RepresentanteRegistroForm(request.POST, request.FILES)
         if form.is_valid():
-            representante = form.save()  # Salva o representante
-            group = Group.objects.get(name='Representante Esportivo')  # Obtenha o grupo
+            representante = form.save() 
+            group = Group.objects.get(name='Representante Esportivo')
 
-            # Adiciona o grupo ao usuário associado
             representante.user.groups.add(group)
             
-            return redirect('login')  # Redireciona após o sucesso
+            return redirect('login')
     else:
         form = RepresentanteRegistroForm()
     
     return render(request, 'html/registro.html', {'form': form})
+
 
 def login_representante(request):
   if request.method == 'POST':
@@ -40,7 +35,10 @@ def login_representante(request):
       user = authenticate(username=username, password=password)
       if user is not None:
         login(request, user)
-        return redirect('home')  # Redireciona para a página inicial após o login
+        if user.groups.filter(name='Administrador Esportivo').exists():
+            return render(request, 'html/adm.html')
+        elif user.groups.filter(name='Representante Esportivo').exists():
+            return render(request, 'html/user.html')
       else:
         form.add_error(None, 'CPF ou senha inválidos.')
   else:
@@ -53,6 +51,28 @@ def download_document(request):
 
 logger = logging.getLogger(__name__)
 
+
+
+def is_admin_esportivo(user):
+    return user.groups.filter(name='Administrador Esportivo').exists()
+
+def is_representante_esportivo(user):
+    return user.groups.filter(name='Representante Esportivo').exists()
+
+@login_required(login_url='login')
+def user(request):
+    if not is_representante_esportivo(request.user):
+        logout(request) 
+        return redirect('home')
+    return render(request, 'html/user.html')
+
+@login_required(login_url='login')
+def adm(request):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
+    return render(request, 'html/adm.html')
+
 def home(request):
     return render(request, 'html/home.html')
 
@@ -62,11 +82,3 @@ def editais(request):
 def sobre(request):
     return render(request, 'html/sobre.html')
 
-
-@login_required
-def adm(request):
-   return render(request, 'html/adm.html')
-
-@login_required
-def user(request):
-   return render(request, 'html/user.html')
