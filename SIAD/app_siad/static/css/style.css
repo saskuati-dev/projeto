@@ -24,7 +24,10 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f0f0;
+    background: url("/static/images/rateque.jpeg");
+    background-repeat:repeat;
+    background-size:contain;
+    background-position:center;
 }
 
 nav {
@@ -114,6 +117,7 @@ nav li:first-child {
     max-width: 400px;
     text-align: center;
     margin: 0 auto;
+    margin-top: 10px;
 }
 
 .login-container h1 {
@@ -209,6 +213,7 @@ button:hover {
     border-top: none;
     border-top-style:hidden;
     border-radius: 10px;
+    margin-top: -15px;
     margin-bottom: 15px;
     margin-left: 5px;
     margin-right: 5px;
@@ -221,6 +226,8 @@ button:hover {
     border-radius: 4px;
     margin: 10;
     border-radius: 10px;
+    margin-bottom: 10px;
+    text-align: left;
 }
 .gaveta-header.active {
     background-color: #ccc;

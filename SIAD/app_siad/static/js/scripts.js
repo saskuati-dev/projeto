@@ -1,3 +1,12 @@
+function showSidebar(){
+    const sidebar= document.querySelector('.sidebar')
+    sidebar.style.display= 'flex'
+}
+function hideSidebar(){
+    const sidebar= document.querySelector('.sidebar')
+    sidebar.style.display= 'none'
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Funções para mostrar e ocultar a barra lateral
     function showSidebar() {
