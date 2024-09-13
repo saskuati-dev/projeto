@@ -1,12 +1,19 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm
+from .models import Noticia  
 import logging
 import os
 from django.conf import settings
+
+from django.http import HttpResponseForbidden
+from .forms import EdicaoEventoForm
+from .models import EdicaoEvento, Grupo
+
+
 def logout_view(request):
     logout(request)
     return redirect('home')
@@ -67,18 +74,56 @@ def user(request):
         return redirect('home')
     return render(request, 'html/user.html')
 
+
+#@login_required(login_url='login')
+def adm(request): 
+    #if not is_admin_esportivo(request.user):
+     #   logout(request)
+      #  return redirect('home')
+    
+    eventos = EdicaoEvento.objects.all()
+    print(eventos)
+    return render(request, 'html/adm.html', {'eventos': eventos})
+    
+def lista_grupos(request, evento_id):
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    grupos = Grupo.objects.filter(edicao_evento=evento)
+    return render(request, 'lista_grupos.html', {'evento': evento, 'grupos': grupos})
+
+
+def grupos_do_evento_view(request, evento_id):
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    grupos = evento.grupos.all()
+    return render(request, 'html/admin_grupos_do_evento.html', {'evento': evento, 'grupos': grupos})
+
+def detalhes_grupo(request, grupo_id):
+    grupo = get_object_or_404(Grupo, id=grupo_id)
+    return render(request, 'html/detalhes_grupo.html', {'grupo': grupo})
+
+
 @login_required(login_url='login')
-def adm(request):
+def eventos_view(request):
     if not is_admin_esportivo(request.user):
-        logout(request)
-        return redirect('home')
-    return render(request, 'html/adm.html')
+        return HttpResponseForbidden("Você não tem permissão para acessar esta página.")
+    
+    if request.method == 'POST':
+        form = EdicaoEventoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('html/eventos_view')  # Redireciona para a mesma página após a criação
+    else:
+        form = EdicaoEventoForm()
+    
+    eventos = EdicaoEvento.objects.all()
+    return render(request, 'html/eventos.html', {'form': form, 'eventos': eventos})
+
+
 
 def home(request):
-    return render(request, 'html/home.html')
+    
+    noticias = Noticia.objects.all().order_by('-criado_em')
+    return render(request, 'html/home.html', {'noticias': noticias})
 
-def editais(request):
-    return render(request, 'html/editais.html')
 
 def sobre(request):
     return render(request, 'html/sobre.html')
@@ -120,3 +165,17 @@ def editais(request):
                 })
 
     return render(request, 'html/editais.html', {'eventos': eventos})
+
+
+def noticias(request):
+    if request.method == 'POST':
+        form = NoticiaForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('noticias')  # Redirecione para a página de listagem de notícias
+    else:
+        form = NoticiaForm()
+    return render(request, 'html/noticias.html', {'form': form})
+
+def criar_evento(request):
+    return render(request, 'html/criar_evento.html')

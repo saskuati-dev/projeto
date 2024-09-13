@@ -1,6 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
+class Noticia(models.Model):
+    titulo = models.CharField(max_length=200)
+    texto = models.TextField()
+    imagem = models.ImageField(upload_to='noticias/', blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-criado_em']  
+    def __str__(self):
+        return self.titulo
+
 class EventoOriginal(models.Model):
     nome = models.CharField(max_length=100)
     def __str__(self):
@@ -53,6 +65,11 @@ class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     descricao_grupo = models.TextField()
     taxa = models.DecimalField(max_digits=10, decimal_places=2)
+    edicao_evento = models.ForeignKey(EdicaoEvento, related_name='grupos', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.nome
+
 
 class AtletaGrupoDivisao(models.Model):
     atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE)
@@ -62,6 +79,7 @@ class AtletaGrupoDivisao(models.Model):
 
 class RepresentanteEsportivo(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    representacao = models.CharField(max_length=150, unique=True)
     nome = models.CharField(max_length=100)
     telefone = models.CharField(max_length=20, unique=True)
     documento = models.FileField(upload_to="comprovantes_matricula/")  

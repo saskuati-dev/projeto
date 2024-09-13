@@ -1,8 +1,17 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import RepresentanteEsportivo
+from .models import RepresentanteEsportivo, EdicaoEvento
 from django.contrib.auth.forms import AuthenticationForm
+from tinymce.widgets import TinyMCE
+from .models import Noticia
 
+
+
+class EdicaoEventoForm(forms.ModelForm):
+    class Meta:
+        model = EdicaoEvento
+        fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim', 'evento_original']
+        
 def validar_cpf(cpf):
     cpf = ''.join([char for char in cpf if char.isdigit()])  # Remove qualquer caractere que não seja dígito
     if len(cpf) != 11:
@@ -27,17 +36,18 @@ def validar_cpf(cpf):
 
 class RepresentanteRegistroForm(forms.ModelForm):
     username = forms.CharField(label="CPF", max_length=11)
+    representacao = forms.CharField(label="Representação:")
     email = forms.EmailField(label="Email")
     password = forms.CharField(label="Senha", widget=forms.PasswordInput)
     nome = forms.CharField(label="Nome", max_length=100)
     telefone = forms.CharField(label="Telefone", max_length=20)
     documento = forms.FileField(label="Termo de Compromisso Assinado")
     rg = forms.CharField(label="RG", max_length=20)
-    dados_escola = forms.CharField(label="Dados da Escola", widget=forms.Textarea)
+    dados_escola = forms.CharField(label="Dados da Escola",  widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
 
     class Meta:
         model = RepresentanteEsportivo
-        fields = ['nome', 'telefone', 'email', 'documento', 'rg', 'dados_escola']
+        fields = ['nome', 'representacao','telefone', 'email', 'documento', 'rg', 'dados_escola']
 
     def clean_username(self):
         cpf = self.cleaned_data.get('username')
@@ -75,3 +85,13 @@ class RepresentanteRegistroForm(forms.ModelForm):
 class RepresentanteLoginForm(AuthenticationForm):
     username = forms.CharField(label="CPF", max_length=11)
     password = forms.CharField(label="Senha", widget=forms.PasswordInput)
+
+
+
+class NoticiaForm(forms.ModelForm):
+    class Meta:
+        model = Noticia
+        fields = ['titulo', 'texto', 'imagem']
+        widgets = {
+            'texto': TinyMCE(attrs={'cols': 80, 'rows': 30}),
+        }

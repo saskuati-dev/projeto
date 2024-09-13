@@ -6,8 +6,24 @@
     <h2>John Doe</h2>
     <p>Explorer of life.</p>
   
-    <img src="{% static 'images/cachorro.jpeg' %}" alt="Descrição da imagem" class="responsive-image"">
+    <img src="{% static 'images/cachorro.jpeg' %}" alt="Descrição da imagem" class="responsive-image">
 
 
 </div>
+<ul>
+    {% for noticia in noticias %}
+    <div class="container">
+        <h1>{{ noticia.titulo }}</h1>
+        {% if noticia.imagem %}
+            <img src="{{ noticia.imagem.url }}" alt="{{ noticia.titulo }}" class="responsive-image" style="max-width: 400px; height: auto;">
+        {% endif %}
+        <!-- Renderize o texto da notícia como HTML -->
+        <p>{{ noticia.texto|safe }}</p>
+        <p style="margin-top: 15px; margin-bottom: 0px"><small>Criado em: {{ noticia.criado_em|date:"d/m/Y H:i" }}</small></p>
+    </div>
+    {% empty %}
+        <li>Nenhuma notícia encontrada.</li>
+    {% endfor %}
+</ul>
+
 {% endblock %}

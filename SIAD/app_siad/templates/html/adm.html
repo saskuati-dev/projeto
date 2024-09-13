@@ -1,1 +1,37 @@
-<h1>adm</h1>
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Administrador{% endblock %}
+{% block userinfo %}
+<div class="container">
+    
+    
+    <h2>Lista de Eventos</h2>
+    <div style="text-align: right; margin-right:10px;">
+        <a href="{% url 'criar_evento' %}">
+            <button>Criar Evento</button>
+        </a>
+    </div>
+    <ul>
+        {% for evento in eventos %}
+            <h2 class="gaveta-header">
+                {{ evento.edicao }} - {{ evento.local }} ({{ evento.data_inicio }} a {{ evento.data_fim }})
+            </h2>
+            <div class="gaveta-content">
+                <ul>
+                    {% for grupo in evento.grupos.all|dictsort:"nome" %}
+                        <p>
+                            <a href="{% url 'detalhes_grupo' grupo.id %}">{{ grupo.nome }}</a>
+                        </p>
+                    {% empty %}
+                        <p>Nenhum grupo encontrado.</p>
+                    {% endfor %}
+                </ul>
+
+
+            </div>
+        {% empty %}
+            <li>Nenhum evento encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

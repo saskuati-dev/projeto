@@ -1,0 +1,9 @@
+{% extends "base/base.html" %}
+{% block title %}Detalhes do Grupo{% endblock %}
+{% block userinfo %}
+<div class="container">
+    <h2>{{ grupo.nome }}</h2>
+    <p>{{ grupo.descricao_grupo }}</p>
+    <p>Taxa: {{ grupo.taxa }}</p>
+</div>
+{% endblock %}

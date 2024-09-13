@@ -24,17 +24,37 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url("/static/images/rateque.jpeg");
-    background-repeat:repeat;
-    background-size:contain;
-    background-position:center;
+    /*background: url("image_url") repeat;*/
+    background-color: #6ebbffcc;
+    background-size: 25%; /* Não escalar a imagem, manter o tamanho original */
+    background-position: top left; 
 }
+
+
 
 nav {
     background-color: white;
     box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
 }
 
+nav .icon-link a {
+    display: inline-block; /* Garante que o link ao redor do ícone seja do tamanho certo */
+    width: 70px; /* Ajuste conforme necessário */
+    height: 70px; /* Ajuste conforme necessário */
+    background-image: url('/static/icons/icone.ico');
+    background-size: contain; /* Faz com que o ícone se ajuste ao contêiner */
+    background-repeat: no-repeat;
+    background-position: center;
+    text-decoration: none; 
+    margin-top: -10px;
+    margin-left: 10px;/* Remove o sublinhado padrão do link */
+}
+
+/* Garantir que o hover não afete o ícone */
+nav .icon-link a:hover {
+    background-color: transparent; /* Mantém o fundo transparente */
+    color: inherit; /* Mantém a cor original do texto */
+}
 nav ul {
     width: 100%;
     list-style: none;
@@ -100,6 +120,11 @@ nav li:first-child {
     .hambMenu {
         display: block;
     }
+
+    nav .icon-link a {
+        width: 50px; /* Ajuste para dispositivos menores */
+        height: 50px; /* Ajuste para dispositivos menores */
+    }
 }
 
 @media (max-width: 400px) {
@@ -119,12 +144,23 @@ nav li:first-child {
     margin: 0 auto;
     margin-top: 10px;
 }
-
-.login-container h1 {
+.noticias-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+    margin: 0 auto;
+    margin-top: 10px;
+}
+.login-container h1, .noticias-container h1 {
     margin-bottom: 20px;
     font-size: 28px;
     color: #333;
 }
+
 
 .form-group {
     margin-bottom: 20px;
@@ -168,12 +204,12 @@ button:hover {
     }
 }
 
-.form-registro {
+.form-registro , .form-noticias{
     margin-bottom: 20px;
     text-align: left;
 }
 
-.form-registro label {
+.form-registro label, .form-noticias label{
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
@@ -181,8 +217,21 @@ button:hover {
     font-size: 15px;
 }
 
-.form-registro input {
+.form-registro input, .form-noticias input{
     width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.form-registro textarea{
+    width: 100%;
+    height: 100px;;
+}
+
+.form-noticias textarea{
+    width: 100%;
+    height: 300px;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -192,6 +241,7 @@ button:hover {
 .responsive-image {
     max-width: 100%; 
     height: auto; 
+    border-radius: 10px;
 }
 
 .container p {
@@ -232,3 +282,4 @@ button:hover {
 .gaveta-header.active {
     background-color: #ccc;
 }
+

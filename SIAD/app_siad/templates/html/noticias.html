@@ -1,0 +1,12 @@
+{% extends "base/base.html" %}
+{% block title %}Noticias{% endblock %}
+{% block userinfo %}
+<div class="noticias-container">
+    <h1>Postar Notícia</h1>
+    <form method="post" enctype="multipart/form-data" class="form-noticias">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Postar</button>
+    </form>
+</div>
+{% endblock %}
