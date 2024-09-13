@@ -204,12 +204,12 @@ button:hover {
     }
 }
 
-.form-registro , .form-noticias{
+.form-registro , .form-noticias,.form-evento{
     margin-bottom: 20px;
     text-align: left;
 }
 
-.form-registro label, .form-noticias label{
+.form-registro label, .form-noticias label, .form-evento label{
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
@@ -217,14 +217,14 @@ button:hover {
     font-size: 15px;
 }
 
-.form-registro input, .form-noticias input{
+.form-registro input, .form-noticias input, .form-evento input{
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 12px;
 }
-.form-registro textarea{
+.form-registro textarea, .form-evento textarea{
     width: 100%;
     height: 100px;;
 }

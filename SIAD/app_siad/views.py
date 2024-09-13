@@ -3,15 +3,48 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm
-from .models import Noticia  
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm
+from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal
 import logging
 import os
 from django.conf import settings
-
 from django.http import HttpResponseForbidden
-from .forms import EdicaoEventoForm
-from .models import EdicaoEvento, Grupo
+
+
+def criar_evento(request):
+    if request.method == 'POST':
+        form = EdicaoEventoForm(request.POST)
+        if form.is_valid():
+            evento_data = form.cleaned_data
+            evento_original = evento_data['evento_original']
+            novo_evento_original = evento_data['novo_evento_original']
+            
+            if not evento_original:
+                evento_original = EventoOriginal.objects.create(nome=novo_evento_original)
+            
+            edicao_evento = EdicaoEvento.objects.create(
+                edicao=form.cleaned_data['edicao'],
+                local=form.cleaned_data['local'],
+                descricao=form.cleaned_data['descricao'],
+                cidade=form.cleaned_data['cidade'],
+                data_inicio=form.cleaned_data['data_inicio'],
+                data_fim=form.cleaned_data['data_fim'],
+                evento_original=evento_original
+            )
+            
+            evento_folder = os.path.join(settings.MEDIA_ROOT, 'eventos', str(edicao_evento.edicao))
+            if not os.path.exists(evento_folder):
+                os.makedirs(evento_folder)
+
+
+            request.session['edicao_evento_id'] = edicao_evento.id
+            return redirect('adm')
+    else:
+        form = EdicaoEventoForm()
+
+    return render(request, 'html/criar_evento.html', {'form': form})
+
+
 
 
 def logout_view(request):
@@ -110,13 +143,12 @@ def eventos_view(request):
         form = EdicaoEventoForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('html/eventos_view')  # Redireciona para a mesma página após a criação
+            return redirect('html/eventos_view')  
     else:
         form = EdicaoEventoForm()
     
     eventos = EdicaoEvento.objects.all()
     return render(request, 'html/eventos.html', {'form': form, 'eventos': eventos})
-
 
 
 def home(request):
@@ -129,32 +161,23 @@ def sobre(request):
     return render(request, 'html/sobre.html')
 
 
-
-
-
-
 def editais(request):
-    # Caminho para a pasta de eventos
     eventos_path = os.path.join(settings.MEDIA_ROOT, 'eventos')
 
     eventos = []
     if os.path.exists(eventos_path):
-        # Para cada diretório dentro de 'eventos' (que representa um evento)
         for nome_evento in sorted(os.listdir(eventos_path), key=lambda x: os.path.getmtime(os.path.join(eventos_path, x)), reverse=True):
             evento_path = os.path.join(eventos_path, nome_evento)
 
-            # Verifica se é um diretório (evento)
             if os.path.isdir(evento_path):
-                # Lista os arquivos de editais dentro da pasta do evento, ordenados por data de modificação
                 editais = sorted(
                     [edital for edital in os.listdir(evento_path) if os.path.isfile(os.path.join(evento_path, edital))],
                     key=lambda x: os.path.getmtime(os.path.join(evento_path, x)),
                     reverse=True
                 )
 
-                # Adiciona o evento e seus editais à lista de eventos
                 eventos.append({
-                    'nome': nome_evento,  # Nome do evento
+                    'nome': nome_evento,
                     'editais': [
                         {
                             'nome': edital,
@@ -172,10 +195,10 @@ def noticias(request):
         form = NoticiaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('noticias')  # Redirecione para a página de listagem de notícias
+            return redirect('noticias')  
     else:
         form = NoticiaForm()
     return render(request, 'html/noticias.html', {'form': form})
 
-def criar_evento(request):
-    return render(request, 'html/criar_evento.html')
+
+

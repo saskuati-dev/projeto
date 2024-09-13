@@ -1,32 +1,44 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import RepresentanteEsportivo, EdicaoEvento
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
-from .models import Noticia
+from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento
 
-
+class EventoOriginalForm(forms.ModelForm):
+    class Meta:
+        model = EventoOriginal
+        fields = ['nome']
 
 class EdicaoEventoForm(forms.ModelForm):
+    evento_original = forms.ModelChoiceField(
+        queryset=EventoOriginal.objects.all(),
+        empty_label="Escolha um evento original ou crie um novo",
+        required=False
+    )
+    novo_evento_original = forms.CharField(
+        max_length=100,
+        required=False,
+        label="Criar novo evento original"
+    )
+    num_grupos = forms.IntegerField(min_value=1, required=True)
+
     class Meta:
         model = EdicaoEvento
-        fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim', 'evento_original']
+        fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim']
+
         
 def validar_cpf(cpf):
-    cpf = ''.join([char for char in cpf if char.isdigit()])  # Remove qualquer caractere que não seja dígito
+    cpf = ''.join([char for char in cpf if char.isdigit()])  
     if len(cpf) != 11:
         return False
 
     if cpf in [s * 11 for s in "0123456789"]:
-        return False  # CPFs com todos os dígitos iguais são inválidos
-
-    # Validação do primeiro dígito verificador
+        return False  
     soma = sum(int(cpf[i]) * (10 - i) for i in range(9))
     primeiro_verificador = (soma * 10 % 11) % 10
     if primeiro_verificador != int(cpf[9]):
         return False
-
-    # Validação do segundo dígito verificador
+    
     soma = sum(int(cpf[i]) * (11 - i) for i in range(10))
     segundo_verificador = (soma * 10 % 11) % 10
     if segundo_verificador != int(cpf[10]):

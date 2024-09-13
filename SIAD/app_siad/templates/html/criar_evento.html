@@ -1,5 +1,16 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% block title %}Administrador{% endblock %}
+{% block title %}Criar Evento{% endblock %}
 {% block userinfo %}
+
+<div class="container">
+
+    <form method="post" class="form-evento">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Criar Evento</button>
+    </form>
+        
+</div>
+
 {%endblock%}
