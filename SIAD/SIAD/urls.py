@@ -17,11 +17,10 @@ urlpatterns = [
     path('login/', views.login_representante, name='login'),
     path('cadastro/', views.registro_representante, name='cadastro'),
     path('eventos/', views.eventos_view, name='eventos_view'),
-     path('tinymce/', include('tinymce.urls')),
-     path('criar-evento/', views.criar_evento, name='criar_evento'),
-     path('grupo/<int:pk>/', views.detalhes_grupo, name='detalhes_grupo'),
-    path('add_grupos/<int:evento_id>/', views.add_grupos, name='add_grupos'),
-    path('delete_grupos/<int:evento_id>/', views.delete_grupos, name='delete_grupos'),
+    path('tinymce/', include('tinymce.urls')),
+    path('criar-evento/', views.criar_evento, name='criar_evento'),
+    path('grupo/<int:pk>/', views.detalhes_grupo, name='detalhes_grupo'),
+    path('upload_edital/<int:evento_id>/', views.upload_edital, name='upload_edital'),
     path('detalhes_evento/<int:evento_id>/', views.evento_detalhes, name='detalhes_evento'),
     path('noticias/', views.noticias, name='noticias')
     

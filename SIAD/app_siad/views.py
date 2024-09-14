@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
 from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao
 import logging
 import os
@@ -12,8 +12,11 @@ from django.http import HttpResponseForbidden
 from django.contrib import messages
 
 
-
+@login_required(login_url='login')
 def evento_detalhes(request, evento_id):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
     
     grupos = Grupo.objects.filter(edicao_evento=evento)
@@ -118,37 +121,39 @@ def evento_detalhes(request, evento_id):
 
 
 
-def add_grupos(request, evento_id):
+@login_required(login_url='login')
+def upload_edital(request, evento_id):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
+    
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
 
     if request.method == 'POST':
-        form = GrupoForm(request.POST)
+        form = EditalForm(request.POST, request.FILES)
         if form.is_valid():
-            grupo = form.save(commit=False)
-            grupo.edicao_evento = evento
-            grupo.save()
-            return redirect('add_grupos', evento_id=evento_id)
+            edital = form.save(commit=False)
+            edital.evento = evento  # Associa o edital ao evento
+            edital.save()
+            return redirect('editais')  # Redireciona para a lista de editais ou outra página apropriada
     else:
-        form = GrupoForm()
+        form = EditalForm()
 
-    return render(request, 'html/add_grupos.html', {'form': form, 'evento': evento})
+    return render(request, 'html/upload_edital.html', {'form': form, 'evento': evento})
 
-def delete_grupos(request, evento_id):
-    evento = get_object_or_404(EdicaoEvento, id=evento_id)
-
-    if request.method == 'POST':
-        grupo_ids = request.POST.getlist('grupos')
-        Grupo.objects.filter(id__in=grupo_ids).delete()
-        return redirect('adm')
-
-    grupos = Grupo.objects.filter(edicao_evento=evento)
-    return render(request, 'html/delete_grupos.html', {'grupos': grupos, 'evento': evento})
-
+@login_required(login_url='login')
 def detalhes_grupo(request, pk):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
     grupo = get_object_or_404(Grupo, pk=pk)
     return render(request, 'html/detalhes_grupo.html', {'grupo': grupo})
 
+@login_required(login_url='login')
 def criar_evento(request):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
     if request.method == 'POST':
         form = EdicaoEventoForm(request.POST)
         if form.is_valid():
@@ -249,19 +254,19 @@ def is_admin_esportivo(user):
 def is_representante_esportivo(user):
     return user.groups.filter(name='Representante Esportivo').exists()
 
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def user(request):
-   # if not is_representante_esportivo(request.user):
-        #logout(request) 
-        #return redirect('home')
+    if not is_representante_esportivo(request.user):
+        logout(request) 
+        return redirect('home')
     return render(request, 'html/user.html')
 
 
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def adm(request): 
-    #if not is_admin_esportivo(request.user):
-     #   logout(request)
-      #  return redirect('home')
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
     
     eventos = EdicaoEvento.objects.all()
     

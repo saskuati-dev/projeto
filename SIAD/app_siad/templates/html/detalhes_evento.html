@@ -4,29 +4,29 @@
 {% block userinfo %}
 <div class="container">
     <h1>Detalhes do Evento: {{ evento.nome }}</h1>
-
+    <div style="text-align: right; margin-right:10px; margin-bottom: 10px">
+        <a href="{% url 'upload_edital' evento_id=evento.id %}" >
+            <button>Postar Edital</button>
+        </a>
+    </div>
     <!-- Grupos -->
-    <h2>Grupos</h2>
+    <h2 class="gaveta-header">Grupos</h2>
+    <div class="gaveta-content">
     <ul>
         {% for grupo in grupos %}
-        <li>
-            {{ grupo.nome }} - {{ grupo.descricao_grupo }}
+        <ul>
+            {{ grupo.nome }} 
             <form method="POST" style="display:inline; "class="form-evento">
                 {% csrf_token %}
                 <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
                 <button type="submit" name="delete_grupo">Excluir</button>
+                <hr width="100%" size="2">
             </form>
-            <form method="POST" style="display:inline;" class="form-evento">
-                {% csrf_token %}
-                <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
-                <input type="text" name="nome" value="{{ grupo.nome }}">
-                <textarea name="descricao_grupo">{{ grupo.descricao_grupo }}</textarea>
-                <input type="number" name="taxa" value="{{ grupo.taxa }}">
-                <button type="submit" name="edit_grupo">Editar</button>
-            </form>
-        </li>
+            
+        </ul>
         {% endfor %}
     </ul>
+</div>
 
     <h3>Adicionar Novo Grupo</h3>
     <form method="POST" class="form-evento">
@@ -36,29 +36,23 @@
     </form>
 
     <!-- Modalidades -->
-    <h2>Modalidades</h2>
+    <h2 class="gaveta-header">Modalidades</h2>
+    <div class="gaveta-content"
     <ul>
         {% for modalidade in modalidades %}
-        <li>
-            {{ modalidade.nome }} - {{ modalidade.regras_modalidade }}
+        <ul>
+            {{ modalidade.nome }} {{ modalidade.categoria}}- {{ modalidade.local }}
             <form method="POST" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="modalidade_id" value="{{ modalidade.id }}">
-                <button type="submit" name="delete_modalidade">Excluir</button>
+                <a ><button type="submit" name="delete_modalidade" >Excluir</button></a>
+                <hr width="100%" size="2">
             </form>
-            <form method="POST" style="display:inline;"class="form-evento">
-                {% csrf_token %}
-                <input type="hidden" name="modalidade_id" value="{{ modalidade.id }}">
-                <input type="text" name="nome" value="{{ modalidade.nome }}">
-                <textarea name="regras_modalidade">{{ modalidade.regras_modalidade }}</textarea>
-                <input type="text" name="local" value="{{ modalidade.local }}">
-                <input type="text" name="categoria" value="{{ modalidade.categoria }}">
-                <button type="submit" name="edit_modalidade">Editar</button>
-            </form>
-        </li>
+            
+        </ul>
         {% endfor %}
     </ul>
-
+</div>
     <h3>Adicionar Nova Modalidade</h3>
     <form method="POST"class="form-evento">
         {% csrf_token %}
@@ -67,36 +61,23 @@
     </form>
 
     <!-- Divisões -->
-    <h2>Divisões</h2>
+    <h2 class="gaveta-header">Divisões</h2>
+    <div class="gaveta-content">
     <ul>
         {% for divisao in divisoes %}
-        <li>
+        <ul> <b>Modalidade: {{ divisao.modalidade.nome }}</b><br>
             Tipo: {{ divisao.get_tipo_divisao_display }} - {{ divisao.minAtleta }} a {{ divisao.maxAtleta }} atletas
-            Modalidade: {{ divisao.modalidade.nome }}
+            
             <form method="POST" style="display:inline;">
                 {% csrf_token %}
                 <input type="hidden" name="divisao_id" value="{{ divisao.id }}">
                 <button type="submit" name="delete_divisao">Excluir</button>
+                <hr width="100%" size="2">
             </form>
-            <form method="POST" style="display:inline;">
-                {% csrf_token %}
-                <input type="hidden" name="divisao_id" value="{{ divisao.id }}">
-                <select name="modalidade">
-                    {% for modalidade in modalidades %}
-                        <option value="{{ modalidade.id }}" {% if modalidade.id == divisao.modalidade.id %}selected{% endif %}>{{ modalidade.nome }}</option>
-                    {% endfor %}
-                </select>
-                <input type="number" name="minAtleta" value="{{ divisao.minAtleta }}">
-                <input type="number" name="maxAtleta" value="{{ divisao.maxAtleta }}">
-                <select name="tipo_divisao">
-                    <option value="G" {% if divisao.tipo_divisao == 'G' %}selected{% endif %}>Grupo</option>
-                    <option value="I" {% if divisao.tipo_divisao == 'I' %}selected{% endif %}>Individual</option>
-                </select>
-                <button type="submit" name="edit_divisao">Editar</button>
-            </form>
-        </li>
+        </ul>
         {% endfor %}
     </ul>
+</div>
 
     <h3>Adicionar Nova Divisão</h3>
     <form method="POST">

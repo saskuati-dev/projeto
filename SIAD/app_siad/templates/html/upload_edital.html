@@ -1,0 +1,15 @@
+<!-- templates/upload_edital.html -->
+{% extends "base/base.html" %}
+{% block title %}Postar Edital{% endblock %}
+
+{% block userinfo %}
+<div class="container">
+    <h1>Postar Edital para Evento {{ evento.nome }}</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Enviar Edital</button>
+    </form>
+</div>
+{% endblock %}

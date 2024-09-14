@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
+import os
+import datetime
 
 
 class Noticia(models.Model):
@@ -103,3 +106,17 @@ class Pagamentos(models.Model):
 class Equipe(models.Model):
     nome = models.CharField(max_length=100)
     representante_esportivo = models.ForeignKey(RepresentanteEsportivo, on_delete=models.CASCADE)
+
+
+
+def get_upload_to(instance, filename):
+    # Acessa o modelo EdicaoEvento para obter o nome do evento
+    evento_nome = instance.evento.edicao  # ou outro atributo do EdicaoEvento que você deseja usar
+    data_atual = datetime.datetime.now().strftime('%Y%m%d')
+    nome_arquivo, extensao = os.path.splitext(filename)
+    novo_nome_arquivo = f"{data_atual}_{nome_arquivo}{extensao}"
+    return f"eventos/{evento_nome}/{novo_nome_arquivo}"
+
+class Edital(models.Model):
+    evento = models.ForeignKey('EdicaoEvento', on_delete=models.CASCADE)
+    arquivo = models.FileField(upload_to=get_upload_to)

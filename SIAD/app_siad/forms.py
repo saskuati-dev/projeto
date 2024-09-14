@@ -2,8 +2,20 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
-from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
+from .models import Edital,EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
 
+
+class EditalForm(forms.ModelForm):
+    class Meta:
+        model = Edital
+        fields = ['arquivo']
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data.get('arquivo')
+        if not arquivo.name.endswith('.pdf'):
+            raise forms.ValidationError("O arquivo deve ser um PDF.")
+        return arquivo
+    
 class DivisaoForm(forms.ModelForm):
     class Meta:
         model = Divisao
