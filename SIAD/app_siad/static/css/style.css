@@ -182,7 +182,7 @@ nav li:first-child {
     font-size: 18px;
 }
 
-button {
+button, .voltar {
     background-color: #228ae6;
     color: white;
     border: none;
@@ -193,7 +193,7 @@ button {
     margin-top: 15px;
 }
 
-button:hover {
+button:hover , .voltar:hover{
     background-color: #1a6ab2;
 }
 

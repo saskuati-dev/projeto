@@ -17,10 +17,11 @@ urlpatterns = [
     path('login/', views.login_representante, name='login'),
     path('cadastro/', views.registro_representante, name='cadastro'),
     path('eventos/', views.eventos_view, name='eventos_view'),
-    path('eventos/<int:evento_id>/grupos/', views.lista_grupos, name='lista_grupos'),
-    path('grupos/<int:grupo_id>/', views.detalhes_grupo, name='detalhes_grupo'),
      path('tinymce/', include('tinymce.urls')),
      path('criar-evento/', views.criar_evento, name='criar_evento'),
+     path('grupo/<int:pk>/', views.detalhes_grupo, name='detalhes_grupo'),
+    path('add_grupos/<int:evento_id>/', views.add_grupos, name='add_grupos'),
+    path('delete_grupos/<int:evento_id>/', views.delete_grupos, name='delete_grupos'),
     path('noticias/', views.noticias, name='noticias')
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

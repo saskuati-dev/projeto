@@ -6,9 +6,12 @@
     
     
     <h2>Lista de Eventos</h2>
-    <div style="text-align: right; margin-right:10px;">
+    <div style="text-align: right; margin-right:10px; margin-bottom: 10px">
         <a href="{% url 'criar_evento' %}">
             <button>Criar Evento</button>
+        </a>
+        <a href="{% url 'noticias' %}">
+            <button>Postar Noticia</button>
         </a>
     </div>
     <ul>
@@ -25,6 +28,10 @@
                     {% empty %}
                         <p>Nenhum grupo encontrado.</p>
                     {% endfor %}
+                    <div style="text-align: right; margin-right:10px;">
+                        <a href="{% url 'add_grupos' evento.id %}"><button>Novo Grupo</button></a>
+                        <a  href="{% url 'delete_grupos' evento.id %}"><button>Excluir Grupo</button></a>
+                    </div>
                 </ul>
 
 

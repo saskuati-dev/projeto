@@ -4,13 +4,14 @@
 {% block userinfo %}
 
 <div class="container">
-
-    <form method="post" class="form-evento">
+    <form method="post" class="form-evento" id="eventoForm">
         {% csrf_token %}
         {{ form.as_p }}
+        
         <button type="submit">Criar Evento</button>
     </form>
-        
+    
+   
 </div>
 
-{%endblock%}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+{% block title %}Adicionar Grupos{% endblock %}
+{% block userinfo %}
+<div class="container">
+    <h1>Adicionar Grupos para {{ evento.edicao }}</h1>
+    <form method="post" class="form-registro">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="button-container" style="text-align: right; margin-right:10px; margin-bottom: 10px">
+            <button type="submit" class="btn-submit">Adicionar</button>
+            <a href="{% url 'adm' %}" class="voltar">Voltar</a>
+        </div>
+    </form>
+    
+</div>
+{% endblock %}

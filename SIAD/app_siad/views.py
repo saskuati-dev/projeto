@@ -3,17 +3,47 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm, GrupoForm
 from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal
 import logging
 import os
 from django.conf import settings
 from django.http import HttpResponseForbidden
 
+def add_grupos(request, evento_id):
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
 
+    if request.method == 'POST':
+        form = GrupoForm(request.POST)
+        if form.is_valid():
+            grupo = form.save(commit=False)
+            grupo.edicao_evento = evento
+            grupo.save()
+            return redirect('add_grupos', evento_id=evento_id)
+    else:
+        form = GrupoForm()
+
+    return render(request, 'html/add_grupos.html', {'form': form, 'evento': evento})
+
+def delete_grupos(request, evento_id):
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+
+    if request.method == 'POST':
+        grupo_ids = request.POST.getlist('grupos')
+        Grupo.objects.filter(id__in=grupo_ids).delete()
+        return redirect('adm')
+
+    grupos = Grupo.objects.filter(edicao_evento=evento)
+    return render(request, 'html/delete_grupos.html', {'grupos': grupos, 'evento': evento})
+
+def detalhes_grupo(request, pk):
+    grupo = get_object_or_404(Grupo, pk=pk)
+    return render(request, 'html/detalhes_grupo.html', {'grupo': grupo})
 def criar_evento(request):
     if request.method == 'POST':
         form = EdicaoEventoForm(request.POST)
+        num_grupos = int(request.POST.get('num_grupos', 0))
+
         if form.is_valid():
             evento_data = form.cleaned_data
             evento_original = evento_data['evento_original']
@@ -36,14 +66,16 @@ def criar_evento(request):
             if not os.path.exists(evento_folder):
                 os.makedirs(evento_folder)
 
+            # Processar formulários de grupos
+
 
             request.session['edicao_evento_id'] = edicao_evento.id
             return redirect('adm')
     else:
         form = EdicaoEventoForm()
+        num_grupos = 0
 
-    return render(request, 'html/criar_evento.html', {'form': form})
-
+    return render(request, 'html/criar_evento.html', {'form': form, 'num_grupos': num_grupos})
 
 
 
@@ -117,21 +149,9 @@ def adm(request):
     eventos = EdicaoEvento.objects.all()
     print(eventos)
     return render(request, 'html/adm.html', {'eventos': eventos})
-    
-def lista_grupos(request, evento_id):
-    evento = get_object_or_404(EdicaoEvento, id=evento_id)
-    grupos = Grupo.objects.filter(edicao_evento=evento)
-    return render(request, 'lista_grupos.html', {'evento': evento, 'grupos': grupos})
 
 
-def grupos_do_evento_view(request, evento_id):
-    evento = get_object_or_404(EdicaoEvento, id=evento_id)
-    grupos = evento.grupos.all()
-    return render(request, 'html/admin_grupos_do_evento.html', {'evento': evento, 'grupos': grupos})
 
-def detalhes_grupo(request, grupo_id):
-    grupo = get_object_or_404(Grupo, id=grupo_id)
-    return render(request, 'html/detalhes_grupo.html', {'grupo': grupo})
 
 
 @login_required(login_url='login')
@@ -195,7 +215,7 @@ def noticias(request):
         form = NoticiaForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('noticias')  
+            return redirect('home')  
     else:
         form = NoticiaForm()
     return render(request, 'html/noticias.html', {'form': form})

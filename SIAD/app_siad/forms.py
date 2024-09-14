@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
-from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento
+from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo
 
 class EventoOriginalForm(forms.ModelForm):
     class Meta:
@@ -26,6 +26,10 @@ class EdicaoEventoForm(forms.ModelForm):
         model = EdicaoEvento
         fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim']
 
+class GrupoForm(forms.ModelForm):
+    class Meta:
+        model = Grupo
+        fields = ['nome', 'descricao_grupo', 'taxa']
         
 def validar_cpf(cpf):
     cpf = ''.join([char for char in cpf if char.isdigit()])  
