@@ -7,11 +7,7 @@ class EventoOriginalAdmin(admin.ModelAdmin):
     list_display = ('nome',)
     search_fields = ('nome',)
 
-@admin.register(Modalidade)
-class ModalidadeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'local', 'evento_original')
-    search_fields = ('nome', 'local')
-    list_filter = ('evento_original',)
+  
 
 @admin.register(EdicaoEvento)
 class EdicaoEventoAdmin(admin.ModelAdmin):

@@ -3,12 +3,120 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm, GrupoForm
-from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
+from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao
 import logging
 import os
 from django.conf import settings
 from django.http import HttpResponseForbidden
+from django.contrib import messages
+
+
+
+def evento_detalhes(request, evento_id):
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    
+    grupos = Grupo.objects.filter(edicao_evento=evento)
+    modalidades = Modalidade.objects.filter(edicao_evento=evento)
+    divisoes = Divisao.objects.filter(modalidade__edicao_evento=evento)
+    
+    if request.method == 'POST':
+        # Handle group form submissions
+        if 'add_grupo' in request.POST:
+            form = GrupoForm(request.POST)
+            if form.is_valid():
+                grupo = form.save(commit=False)
+                grupo.edicao_evento = evento
+                grupo.save()
+                messages.success(request, "Grupo adicionado com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'edit_grupo' in request.POST:
+            grupo_id = request.POST.get('grupo_id')
+            grupo = get_object_or_404(Grupo, id=grupo_id)
+            form = GrupoForm(request.POST, instance=grupo)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Grupo editado com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'delete_grupo' in request.POST:
+            grupo_id = request.POST.get('grupo_id')
+            grupo = get_object_or_404(Grupo, id=grupo_id)
+            grupo.delete()
+            messages.success(request, "Grupo removido com sucesso!")
+            return redirect('detalhes_evento', evento_id=evento_id)
+        
+        # Handle modality form submissions
+        if 'add_modalidade' in request.POST:
+            form = ModalidadeForm(request.POST)
+            if form.is_valid():
+                modalidade = form.save(commit=False)
+                modalidade.edicao_evento = evento
+                modalidade.save()
+                messages.success(request, "Modalidade adicionada com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'edit_modalidade' in request.POST:
+            modalidade_id = request.POST.get('modalidade_id')
+            modalidade = get_object_or_404(Modalidade, id=modalidade_id)
+            form = ModalidadeForm(request.POST, instance=modalidade)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Modalidade editada com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'delete_modalidade' in request.POST:
+            modalidade_id = request.POST.get('modalidade_id')
+            modalidade = get_object_or_404(Modalidade, id=modalidade_id)
+            modalidade.delete()
+            messages.success(request, "Modalidade removida com sucesso!")
+            return redirect('detalhes_evento', evento_id=evento_id)
+        
+        # Handle division form submissions
+        if 'add_divisao' in request.POST:
+            form = DivisaoForm(request.POST)
+            if form.is_valid():
+                divisao = form.save(commit=False)
+                # Modalidade is already handled as ID by the form
+                divisao.save()
+                messages.success(request, "Divisão adicionada com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'edit_divisao' in request.POST:
+            divisao_id = request.POST.get('divisao_id')
+            divisao = get_object_or_404(Divisao, id=divisao_id)
+            form = DivisaoForm(request.POST, instance=divisao)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Divisão editada com sucesso!")
+                return redirect('detalhes_evento', evento_id=evento_id)
+        
+        elif 'delete_divisao' in request.POST:
+            divisao_id = request.POST.get('divisao_id')
+            divisao = get_object_or_404(Divisao, id=divisao_id)
+            divisao.delete()
+            messages.success(request, "Divisão removida com sucesso!")
+            return redirect('detalhes_evento', evento_id=evento_id)
+    
+    else:
+        grupo_form = GrupoForm()
+        modalidade_form = ModalidadeForm()
+        divisao_form = DivisaoForm()
+
+    context = {
+        'evento': evento,
+        'grupos': grupos,
+        'modalidades': modalidades,
+        'divisoes': divisoes,
+        'grupo_form': grupo_form,
+        'modalidade_form': modalidade_form,
+        'divisao_form': divisao_form,
+    }
+
+    return render(request, 'html/detalhes_evento.html', context)
+
+
 
 def add_grupos(request, evento_id):
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
@@ -39,11 +147,10 @@ def delete_grupos(request, evento_id):
 def detalhes_grupo(request, pk):
     grupo = get_object_or_404(Grupo, pk=pk)
     return render(request, 'html/detalhes_grupo.html', {'grupo': grupo})
+
 def criar_evento(request):
     if request.method == 'POST':
         form = EdicaoEventoForm(request.POST)
-        num_grupos = int(request.POST.get('num_grupos', 0))
-
         if form.is_valid():
             evento_data = form.cleaned_data
             evento_original = evento_data['evento_original']
@@ -67,15 +174,25 @@ def criar_evento(request):
                 os.makedirs(evento_folder)
 
             # Processar formulários de grupos
-
-
+            num_grupos = int(request.POST.get('num_grupos', 0))
+            for i in range(num_grupos):
+                grupo_nome = request.POST.get(f'grupo_nome_{i}')
+                grupo_descricao = request.POST.get(f'grupo_descricao_{i}')
+                grupo_taxa = request.POST.get(f'grupo_taxa_{i}')
+                if grupo_nome:
+                    Grupo.objects.create(
+                        nome=grupo_nome,
+                        descricao_grupo=grupo_descricao,
+                        taxa=grupo_taxa,
+                        edicao_evento=edicao_evento
+                    )
+            
             request.session['edicao_evento_id'] = edicao_evento.id
             return redirect('adm')
     else:
         form = EdicaoEventoForm()
-        num_grupos = 0
-
-    return render(request, 'html/criar_evento.html', {'form': form, 'num_grupos': num_grupos})
+    
+    return render(request, 'html/criar_evento.html', {'form': form})
 
 
 
@@ -132,11 +249,11 @@ def is_admin_esportivo(user):
 def is_representante_esportivo(user):
     return user.groups.filter(name='Representante Esportivo').exists()
 
-@login_required(login_url='login')
+#@login_required(login_url='login')
 def user(request):
-    if not is_representante_esportivo(request.user):
-        logout(request) 
-        return redirect('home')
+   # if not is_representante_esportivo(request.user):
+        #logout(request) 
+        #return redirect('home')
     return render(request, 'html/user.html')
 
 
@@ -147,7 +264,7 @@ def adm(request):
       #  return redirect('home')
     
     eventos = EdicaoEvento.objects.all()
-    print(eventos)
+    
     return render(request, 'html/adm.html', {'eventos': eventos})
 
 

@@ -3,8 +3,7 @@
 {% block title %}Administrador{% endblock %}
 {% block userinfo %}
 <div class="container">
-    
-    
+
     <h2>Lista de Eventos</h2>
     <div style="text-align: right; margin-right:10px; margin-bottom: 10px">
         <a href="{% url 'criar_evento' %}">
@@ -29,12 +28,15 @@
                         <p>Nenhum grupo encontrado.</p>
                     {% endfor %}
                     <div style="text-align: right; margin-right:10px;">
-                        <a href="{% url 'add_grupos' evento.id %}"><button>Novo Grupo</button></a>
-                        <a  href="{% url 'delete_grupos' evento.id %}"><button>Excluir Grupo</button></a>
+                        {% if evento.id %}
+                            <a href="{% url 'detalhes_evento' evento.id %}">
+                                <button>Editar Evento</button>
+                            </a>
+                        {% else %}
+                            <p>ID do evento não encontrado.</p>
+                        {% endif %}
                     </div>
                 </ul>
-
-
             </div>
         {% empty %}
             <li>Nenhum evento encontrado.</li>

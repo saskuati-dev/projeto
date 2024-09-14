@@ -17,19 +17,7 @@ class EventoOriginal(models.Model):
     nome = models.CharField(max_length=100)
     def __str__(self):
         return self.nome
-class Modalidade(models.Model):
-    genero= {
-        ('Fem.', 'Feminino'),
-        ('Masc.', 'Masculino'),
-        ('Geral','Geral')
-    }
-    nome = models.CharField(max_length=100)
-    regras_modalidade = models.TextField()
-    local = models.CharField(max_length=100)
-    categoria = models.CharField(max_length=5,default='', choices=genero)
-    evento_original = models.ForeignKey('EdicaoEvento', on_delete=models.CASCADE)
-    def __str__(self):
-        return self.nome + ' ' +self.categoria
+    
 
 class EdicaoEvento(models.Model):
     edicao = models.CharField(max_length=50)
@@ -42,6 +30,22 @@ class EdicaoEvento(models.Model):
 
     def __str__(self):
         return str(self.evento_original) +' '+str(self.edicao)
+    
+class Modalidade(models.Model):
+    genero= {
+        ('Fem.', 'Feminino'),
+        ('Masc.', 'Masculino'),
+        ('Geral','Geral')
+    }
+    nome = models.CharField(max_length=100)
+    regras_modalidade = models.TextField()
+    local = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=5,default='', choices=genero)
+    edicao_evento = models.ForeignKey(EdicaoEvento, on_delete=models.CASCADE)
+    def __str__(self):
+        return self.nome + ' ' +self.categoria
+
+
 
 class Divisao(models.Model):
     tipo= {
@@ -51,7 +55,7 @@ class Divisao(models.Model):
     minAtleta = models.PositiveIntegerField(default=1)
     maxAtleta = models.PositiveIntegerField(default=1)
     tipo_divisao = models.CharField(max_length=1,default='', choices=tipo)
-    modalidade = models.ForeignKey(EdicaoEvento, on_delete=models.CASCADE)
+    modalidade = models.ForeignKey(Modalidade, on_delete=models.CASCADE)
 
 class Atleta(models.Model):
     nome = models.CharField(max_length=100)

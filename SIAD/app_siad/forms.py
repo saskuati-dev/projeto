@@ -2,7 +2,22 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
-from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo
+from .models import EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
+
+class DivisaoForm(forms.ModelForm):
+    class Meta:
+        model = Divisao
+        fields = ['tipo_divisao', 'minAtleta', 'maxAtleta', 'modalidade']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Adiciona um queryset personalizado se necessário
+        self.fields['modalidade'].queryset = Modalidade.objects.all()
+
+class ModalidadeForm(forms.ModelForm):
+    class Meta:
+        model = Modalidade
+        fields = ['nome', 'regras_modalidade', 'local', 'categoria']
 
 class EventoOriginalForm(forms.ModelForm):
     class Meta:
@@ -20,12 +35,25 @@ class EdicaoEventoForm(forms.ModelForm):
         required=False,
         label="Criar novo evento original"
     )
-    num_grupos = forms.IntegerField(min_value=1, required=True)
 
     class Meta:
         model = EdicaoEvento
         fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim']
 
+    def clean(self):
+        cleaned_data = super().clean()
+        evento_original = cleaned_data.get('evento_original')
+        novo_evento_original = cleaned_data.get('novo_evento_original')
+
+        if not evento_original and not novo_evento_original:
+            raise forms.ValidationError("Você deve escolher um evento original ou criar um novo.")
+
+        if not evento_original and novo_evento_original:
+            if EventoOriginal.objects.filter(nome=novo_evento_original).exists():
+                raise forms.ValidationError("Um evento original com esse nome já existe.")
+
+        return cleaned_data
+    
 class GrupoForm(forms.ModelForm):
     class Meta:
         model = Grupo

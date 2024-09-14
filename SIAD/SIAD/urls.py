@@ -22,6 +22,7 @@ urlpatterns = [
      path('grupo/<int:pk>/', views.detalhes_grupo, name='detalhes_grupo'),
     path('add_grupos/<int:evento_id>/', views.add_grupos, name='add_grupos'),
     path('delete_grupos/<int:evento_id>/', views.delete_grupos, name='delete_grupos'),
+    path('detalhes_evento/<int:evento_id>/', views.evento_detalhes, name='detalhes_evento'),
     path('noticias/', views.noticias, name='noticias')
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

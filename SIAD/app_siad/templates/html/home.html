@@ -2,14 +2,7 @@
 {% load static %}
 {%block title%} Home {%endblock%}
 {% block userinfo %}
-<div class="container">
-    <h2>John Doe</h2>
-    <p>Explorer of life.</p>
-  
-    <img src="{% static 'images/cachorro.jpeg' %}" alt="Descrição da imagem" class="responsive-image">
 
-
-</div>
 <ul>
     {% for noticia in noticias %}
     <div class="container">
