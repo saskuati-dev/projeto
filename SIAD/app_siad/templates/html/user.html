@@ -14,13 +14,12 @@
             <div class="gaveta-content">
                 <ul>
                     {% for grupo in evento.grupos.all|dictsort:"nome" %}
-                        <li>
+                        <ul>
                             <a href="{% url 'detalhes_grupo' grupo.id %}">{{ grupo.nome }}</a>
-                            <form action="{% url 'inscrever_em_divisoes' grupo.id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit">Inscrever-se</button>
-                            </form>
-                        </li>
+                           
+                                <button>Inscrever-se</button>
+                            
+                        </ul>
                     {% empty %}
                         <p>Nenhum grupo encontrado.</p>
                     {% endfor %}

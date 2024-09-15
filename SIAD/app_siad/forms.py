@@ -2,8 +2,47 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
-from .models import Edital,EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
+from .models import Atleta,Edital,EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
 
+
+class InscricaoDivisaoForm(forms.Form):
+    atleta = forms.ModelChoiceField(queryset=Atleta.objects.none(), label='Atleta')
+    divisao = forms.ModelChoiceField(queryset=Divisao.objects.none(), label='Divisão')
+
+    def __init__(self, *args, **kwargs):
+        grupo_id = kwargs.pop('grupo_id', None)
+        super().__init__(*args, **kwargs)
+
+        if grupo_id:
+            # Atualiza o queryset de atletas com base no grupo_id
+            self.fields['atleta'].queryset = Atleta.objects.filter(
+                atletagrupodivisao__grupo__id=grupo_id
+            ).distinct()
+
+            # Atualiza o queryset de divisões com base no grupo_id
+            self.fields['divisao'].queryset = Divisao.objects.filter(
+                modalidade__edicao_evento__grupos__id=grupo_id
+            ).distinct()
+
+
+
+class AtletaDivisaoForm(forms.Form):
+    atletas = forms.ModelMultipleChoiceField(
+        queryset=Atleta.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        label='Atletas'
+    )
+
+class AtletaForm(forms.ModelForm):
+    class Meta:
+        model = Atleta
+        fields = ['nome', 'nascimento', 'rg', 'cpf', 'comprovante_matricula']
+    
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get('cpf')
+        if Atleta.objects.filter(cpf=cpf).exists():
+            raise forms.ValidationError("Já existe um atleta com este CPF.")
+        return cpf
 
 class EditalForm(forms.ModelForm):
     class Meta:

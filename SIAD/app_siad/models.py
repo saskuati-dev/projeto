@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.text import slugify
 import os
 import datetime
 
@@ -30,6 +29,9 @@ class EdicaoEvento(models.Model):
     data_inicio = models.DateField()
     data_fim = models.DateField()
     evento_original = models.ForeignKey(EventoOriginal, on_delete=models.CASCADE)
+
+    def get_grupos(self):
+        return Grupo.objects.filter(edicao_evento=self)
 
     def __str__(self):
         return str(self.evento_original) +' '+str(self.edicao)
@@ -78,19 +80,16 @@ class Grupo(models.Model):
         return self.nome
 
     def listar_divisoes_com_atletas(self, representante=None):
-        # Filtra divisões baseadas no evento da edição
         divisoes = Divisao.objects.filter(modalidade__edicao_evento=self.edicao_evento)
         divisao_atletas = []
 
         for divisao in divisoes:
-            # Obtém os atletas associados a cada divisão
             if representante:
-                # Filtra os grupos pela representação esportiva
                 grupos = Grupo.objects.filter(representante_esportivo=representante)
                 if self in grupos:
                     atletas = AtletaGrupoDivisao.objects.filter(divisao=divisao, grupo__in=grupos)
                 else:
-                    atletas = AtletaGrupoDivisao.objects.none()  # Nenhum atleta se a representação não for associada
+                    atletas = AtletaGrupoDivisao.objects.none()
             else:
                 atletas = AtletaGrupoDivisao.objects.filter(divisao=divisao)
                 
@@ -133,8 +132,7 @@ class Equipe(models.Model):
 
 
 def get_upload_to(instance, filename):
-    # Acessa o modelo EdicaoEvento para obter o nome do evento
-    evento_nome = instance.evento.edicao  # ou outro atributo do EdicaoEvento que você deseja usar
+    evento_nome = instance.evento.edicao 
     data_atual = datetime.datetime.now().strftime('%Y%m%d')
     nome_arquivo, extensao = os.path.splitext(filename)
     novo_nome_arquivo = f"{data_atual}_{nome_arquivo}{extensao}"

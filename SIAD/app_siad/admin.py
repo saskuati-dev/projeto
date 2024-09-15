@@ -1,6 +1,13 @@
 from django.contrib import admin
-from .models import EventoOriginal, Modalidade, EdicaoEvento, Divisao, Atleta, Grupo, AtletaGrupoDivisao, RepresentanteEsportivo, Pagamentos, Equipe
+from .models import Noticia, EventoOriginal, Modalidade, EdicaoEvento, Divisao, Atleta, Grupo, AtletaGrupoDivisao, RepresentanteEsportivo, Pagamentos, Equipe
 
+
+@admin.register(Noticia)
+class NoticiaAdmin(admin.ModelAdmin):
+    ist_display = ('titulo', 'criado_em')
+    search_fields = ('titulo', 'texto')
+    list_filter = ('criado_em',)
+    ordering = ('-criado_em',)
 
 @admin.register(EventoOriginal)
 class EventoOriginalAdmin(admin.ModelAdmin):

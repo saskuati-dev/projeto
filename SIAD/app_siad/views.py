@@ -3,20 +3,19 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
-from .models import Atleta,Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao, RepresentanteEsportivo, AtletaGrupoDivisao
+from .forms import AtletaForm,AtletaDivisaoForm, InscricaoDivisaoForm,RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
+from .models import Atleta, Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao, RepresentanteEsportivo, AtletaGrupoDivisao
 import logging
 import os
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.contrib import messages
 
 
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def evento_detalhes(request, evento_id):
-    #if not is_admin_esportivo(request.user):
-        #logout(request)
-        #return redirect('home')
+    if not is_admin_esportivo(request.user):
+        return redirect('home')
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
     
     grupos = Grupo.objects.filter(edicao_evento=evento)
@@ -24,7 +23,6 @@ def evento_detalhes(request, evento_id):
     divisoes = Divisao.objects.filter(modalidade__edicao_evento=evento)
     
     if request.method == 'POST':
-        # Handle group form submissions
         if 'add_grupo' in request.POST:
             form = GrupoForm(request.POST)
             if form.is_valid():
@@ -50,7 +48,6 @@ def evento_detalhes(request, evento_id):
             messages.success(request, "Grupo removido com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
         
-        # Handle modality form submissions
         if 'add_modalidade' in request.POST:
             form = ModalidadeForm(request.POST)
             if form.is_valid():
@@ -76,12 +73,10 @@ def evento_detalhes(request, evento_id):
             messages.success(request, "Modalidade removida com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
         
-        # Handle division form submissions
         if 'add_divisao' in request.POST:
             form = DivisaoForm(request.POST)
             if form.is_valid():
                 divisao = form.save(commit=False)
-                # Modalidade is already handled as ID by the form
                 divisao.save()
                 messages.success(request, "Divisão adicionada com sucesso!")
                 return redirect('detalhes_evento', evento_id=evento_id)
@@ -119,13 +114,10 @@ def evento_detalhes(request, evento_id):
 
     return render(request, 'html/detalhes_evento.html', context)
 
-
-
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def upload_edital(request, evento_id):
-    #if not is_admin_esportivo(request.user):
-       # logout(request)
-        #return redirect('home')
+    if not is_admin_esportivo(request.user):
+        return redirect('home')
     
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
 
@@ -133,9 +125,9 @@ def upload_edital(request, evento_id):
         form = EditalForm(request.POST, request.FILES)
         if form.is_valid():
             edital = form.save(commit=False)
-            edital.evento = evento  # Associa o edital ao evento
+            edital.evento = evento  
             edital.save()
-            return redirect('editai')  # Redireciona para a lista de editais ou outra página apropriada
+            return redirect('editais')  
     else:
         form = EditalForm()
 
@@ -145,17 +137,17 @@ def upload_edital(request, evento_id):
     }
     
     return render(request, 'html/upload_edital.html', context)
-#@login_required(login_url='login')
+
+@login_required(login_url='login')
 def detalhes_grupo(request, grupo_id):
-    #if not is_admin_esportivo(request.user):
-        #logout(request)
-        #return redirect('home')
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
     
     
     
     grupo = get_object_or_404(Grupo, id=grupo_id)
     
-    # Certifique-se de que esta linha está correta e não usa campos inválidos
     divisoes_com_atletas = grupo.listar_divisoes_com_atletas()
 
     return render(request, 'html/detalhes_grupo.html', {
@@ -163,11 +155,10 @@ def detalhes_grupo(request, grupo_id):
         'divisoes_com_atletas': divisoes_com_atletas,
     })
 
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def criar_evento(request):
-#   3if not is_admin_esportivo(request.user):
-    #    logout(request)
-     #   return redirect('home')
+    if not is_admin_esportivo(request.user):
+        return redirect('home')
     if request.method == 'POST':
         form = EdicaoEventoForm(request.POST)
         if form.is_valid():
@@ -192,7 +183,6 @@ def criar_evento(request):
             if not os.path.exists(evento_folder):
                 os.makedirs(evento_folder)
 
-            # Processar formulários de grupos
             num_grupos = int(request.POST.get('num_grupos', 0))
             for i in range(num_grupos):
                 grupo_nome = request.POST.get(f'grupo_nome_{i}')
@@ -243,11 +233,8 @@ def login_representante(request):
       password = form.cleaned_data['password']
       user = authenticate(username=username, password=password)
       if user is not None:
-        login(request, user)
-        if user.groups.filter(name='Administrador Esportivo').exists():
-            return render(request, 'html/adm.html')
-        elif user.groups.filter(name='Representante Esportivo').exists():
-            return render(request, 'html/user.html')
+            login(request, user)
+            return redirect('home')  
       else:
         form.add_error(None, 'CPF ou senha inválidos.')
   else:
@@ -260,86 +247,36 @@ def download_document(request):
 
 logger = logging.getLogger(__name__)
 
-
-
 def is_admin_esportivo(user):
     return user.groups.filter(name='Administrador Esportivo').exists()
 
 def is_representante_esportivo(user):
     return user.groups.filter(name='Representante Esportivo').exists()
 
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def user(request):
-    #if not is_representante_esportivo(request.user):
-        #logout(request) 
-        #return redirect('home')
-    eventos = EdicaoEvento.objects.all()  # Obtenha todos os eventos. Ajuste o filtro se necessário.
+    if not is_representante_esportivo(request.user):
+        return redirect('home')
+    eventos = EdicaoEvento.objects.all()
     
     context = {
         'eventos': eventos,
     }
     return render(request, 'html/user.html', context)
 
-
-def inscrever_em_divisoes(request, grupo_id):
-    grupo = get_object_or_404(Grupo, id=grupo_id)
-    divisoes = Divisao.objects.filter(modalidade__edicao_evento=grupo.edicao_evento)
-    atletas = Atleta.objects.all()  # Ajuste conforme necessário
-
-    if request.method == 'POST':
-        selected_atletas = request.POST.getlist('atletas')
-        selected_divisoes = request.POST.getlist('divisoes')
-
-        if len(selected_divisoes) > 2:
-            return render(request, 'html/inscrever_em_divisoes.html', {
-                'grupo': grupo,
-                'divisoes': divisoes,
-                'atletas': atletas,
-                'error_message': 'Você pode inscrever seus atletas em no máximo duas divisões.'
-            })
-
-        for atleta_id in selected_atletas:
-            atleta = get_object_or_404(Atleta, id=atleta_id)
-            for divisao_id in selected_divisoes:
-                divisao = get_object_or_404(Divisao, id=divisao_id)
-                if AtletaGrupoDivisao.objects.filter(divisao=divisao).count() >= divisao.maxAtleta:
-                    continue
-                if AtletaGrupoDivisao.objects.filter(atleta=atleta).count() >= 2:
-                    continue
-
-                AtletaGrupoDivisao.objects.create(
-                    atleta=atleta,
-                    grupo=grupo,
-                    divisao=divisao
-                )
-
-        return redirect('user')
-
-    return render(request, 'html/inscrever_em_divisoes.html', {
-        'grupo': grupo,
-        'divisoes': divisoes,
-        'atletas': atletas
-    })
-
-
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def adm(request): 
-    #if not is_admin_esportivo(request.user):
-        #logout(request)
-        #return redirect('home')
+    if not is_admin_esportivo(request.user):
+        return redirect('home')
     
     eventos = EdicaoEvento.objects.all()
     
     return render(request, 'html/adm.html', {'eventos': eventos})
 
-
-
-
-
-#@login_required(login_url='login')
+@login_required(login_url='login')
 def eventos_view(request):
-    #if not is_admin_esportivo(request.user):
-        #return HttpResponseForbidden("Você não tem permissão para acessar esta página.")
+    if not is_admin_esportivo(request.user):
+        return redirect("home")
     
     if request.method == 'POST':
         form = EdicaoEventoForm(request.POST)
@@ -392,7 +329,12 @@ def editais(request):
     return render(request, 'html/editais.html', {'eventos': eventos})
 
 
+   
+
+@login_required(login_url='login')
 def noticias(request):
+    if not is_admin_esportivo(request.user):
+        return redirect('home')
     if request.method == 'POST':
         form = NoticiaForm(request.POST, request.FILES)
         if form.is_valid():
@@ -404,3 +346,9 @@ def noticias(request):
 
 
 
+@login_required(login_url='login')
+def gerenciar(request):
+     if not is_representante_esportivo(request.user):
+        return redirect('adm')
+     
+     return redirect('user')
