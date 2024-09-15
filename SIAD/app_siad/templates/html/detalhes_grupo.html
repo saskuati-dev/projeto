@@ -1,9 +1,33 @@
 {% extends "base/base.html" %}
-{% block title %}Detalhes do Grupo{% endblock %}
+{% block title %}Postar Edital{% endblock %}
+
 {% block userinfo %}
 <div class="container">
-    <h2>{{ grupo.nome }}</h2>
-    <p>{{ grupo.descricao_grupo }}</p>
-    <p>Taxa: {{ grupo.taxa }}</p>
-</div>
-{% endblock %}
+    <h1>{{ grupo.nome }}</h1>
+    <p><strong>Descrição: </strong>{{ grupo.descricao_grupo }}</p>
+    <p><strong>Taxa:</strong> {{ grupo.taxa }}</p>
+
+    <h2 style="margin-bottom:10px">Divisões e Atletas Inscritos</h2>
+    <ul>
+        {% for item in divisoes_com_atletas %}
+            <ul>
+                <h2 class="gaveta-header">Modalidade: {{ item.divisao.modalidade.nome }}</h2>
+                <div class="gaveta-content">
+                    <p><strong>Tipo:</strong> {{ item.divisao.tipo_divisao }}</p>
+                    <p><strong>Local:</strong> {{ item.divisao.modalidade.local }}</p>
+                    <p><strong>Categoria:</strong> {{ item.divisao.modalidade.categoria }}</p>
+                    <p><strong>Atletas Inscritos:</strong></p>
+                    <ul>
+                        {% for atleta in item.atletas %}
+                            <li>{{ atleta.atleta.nome }}</li>
+                        {% empty %}
+                            <li>Nenhuma atleta ou representação Inscritos.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </ul>
+        {% empty %}
+            <p>Este grupo não possui divisões.</p>
+        {% endfor %}
+    </ul>
+{%endblock%}

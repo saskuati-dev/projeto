@@ -3,7 +3,7 @@
 {%block title%} Home {%endblock%}
 {% block userinfo %}
 <div class="container">
-    <h1>Detalhes do Evento: {{ evento.nome }}</h1>
+    <h1>Detalhes do Evento: {{ evento.edicao }}</h1>
     <div style="text-align: right; margin-right:10px; margin-bottom: 10px">
         <a href="{% url 'upload_edital' evento_id=evento.id %}" >
             <button>Postar Edital</button>

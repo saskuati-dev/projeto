@@ -1,7 +1,43 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% block title %}Criar Evento{% endblock %}
+{% block title %}Área do Representante{% endblock %}
+
 {% block userinfo %}
-
-
-{%endblock%}
+<div class="container">
+    <h2>Lista de Eventos e Grupos para Inscrição</h2>
+    
+    <ul>
+        {% for evento in eventos %}
+            <h2 class="gaveta-header">
+                {{ evento.edicao }} - {{ evento.local }} ({{ evento.data_inicio }} a {{ evento.data_fim }})
+            </h2>
+            <div class="gaveta-content">
+                <ul>
+                    {% for grupo in evento.grupos.all|dictsort:"nome" %}
+                        <li>
+                            <a href="{% url 'detalhes_grupo' grupo.id %}">{{ grupo.nome }}</a>
+                            <form action="{% url 'inscrever_em_divisoes' grupo.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit">Inscrever-se</button>
+                            </form>
+                        </li>
+                    {% empty %}
+                        <p>Nenhum grupo encontrado.</p>
+                    {% endfor %}
+                </ul>
+                <div style="text-align: right; margin-right:10px;">
+                    {% if evento.id %}
+                        <a href="{% url 'detalhes_evento' evento.id %}">
+                            <button>Ver Detalhes do Evento</button>
+                        </a>
+                    {% else %}
+                        <p>ID do evento não encontrado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <li>Nenhum evento encontrado.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -77,6 +77,29 @@ class Grupo(models.Model):
     def __str__(self):
         return self.nome
 
+    def listar_divisoes_com_atletas(self, representante=None):
+        # Filtra divisões baseadas no evento da edição
+        divisoes = Divisao.objects.filter(modalidade__edicao_evento=self.edicao_evento)
+        divisao_atletas = []
+
+        for divisao in divisoes:
+            # Obtém os atletas associados a cada divisão
+            if representante:
+                # Filtra os grupos pela representação esportiva
+                grupos = Grupo.objects.filter(representante_esportivo=representante)
+                if self in grupos:
+                    atletas = AtletaGrupoDivisao.objects.filter(divisao=divisao, grupo__in=grupos)
+                else:
+                    atletas = AtletaGrupoDivisao.objects.none()  # Nenhum atleta se a representação não for associada
+            else:
+                atletas = AtletaGrupoDivisao.objects.filter(divisao=divisao)
+                
+            divisao_atletas.append({
+                'divisao': divisao,
+                'atletas': atletas
+            })
+        
+        return divisao_atletas
 
 class AtletaGrupoDivisao(models.Model):
     atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE)
