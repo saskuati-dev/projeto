@@ -234,7 +234,7 @@ def login_representante(request):
       user = authenticate(username=username, password=password)
       if user is not None:
             login(request, user)
-            return redirect('home')  
+            return redirect('gerenciar')  
       else:
         form.add_error(None, 'CPF ou senha inválidos.')
   else:
@@ -267,7 +267,7 @@ def user(request):
 @login_required(login_url='login')
 def adm(request): 
     if not is_admin_esportivo(request.user):
-        return redirect('home')
+        return redirect('user')
     
     eventos = EdicaoEvento.objects.all()
     
@@ -350,5 +350,5 @@ def noticias(request):
 def gerenciar(request):
      if not is_representante_esportivo(request.user):
         return redirect('adm')
-     
+        
      return redirect('user')
