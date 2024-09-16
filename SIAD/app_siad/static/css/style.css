@@ -26,7 +26,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     /*background: url("image_url") repeat;*/
     background-color: #6ebbffcc;
-    background-size: 25%; /* Não escalar a imagem, manter o tamanho original */
+    background-size: 25%; 
     background-position: top left; 
 }
 
@@ -38,22 +38,21 @@ nav {
 }
 
 nav .icon-link a {
-    display: inline-block; /* Garante que o link ao redor do ícone seja do tamanho certo */
-    width: 70px; /* Ajuste conforme necessário */
-    height: 70px; /* Ajuste conforme necessário */
+    display: inline-block; 
+    width: 70px; 
+    height: 70px; 
     background-image: url('/static/icons/icone.ico');
-    background-size: contain; /* Faz com que o ícone se ajuste ao contêiner */
+    background-size: contain; 
     background-repeat: no-repeat;
     background-position: center;
     text-decoration: none; 
     margin-top: -10px;
-    margin-left: 10px;/* Remove o sublinhado padrão do link */
+    margin-left: 10px;
 }
 
-/* Garantir que o hover não afete o ícone */
 nav .icon-link a:hover {
-    background-color: transparent; /* Mantém o fundo transparente */
-    color: inherit; /* Mantém a cor original do texto */
+    background-color: transparent; 
+    color: inherit; 
 }
 nav ul {
     width: 100%;
@@ -122,8 +121,8 @@ nav li:first-child {
     }
 
     nav .icon-link a {
-        width: 50px; /* Ajuste para dispositivos menores */
-        height: 50px; /* Ajuste para dispositivos menores */
+        width: 50px; 
+        height: 50px; 
     }
 }
 
@@ -257,7 +256,7 @@ button:hover , .voltar:hover{
 }
 
 .gaveta-content {
-    display: none; /* Inicialmente escondido */
+    display: none; 
     padding: 10px;
     border: 1px solid #ddd;
     border-top: none;

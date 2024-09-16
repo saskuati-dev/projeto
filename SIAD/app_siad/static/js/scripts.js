@@ -8,7 +8,7 @@ function hideSidebar(){
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Funções para mostrar e ocultar a barra lateral
+   
     function showSidebar() {
         const sidebar = document.querySelector('.sidebar');
         sidebar.style.display = 'flex';
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebar.style.display = 'none';
     }
 
-    // Função para lidar com as gavetas
+    
     var headers = document.querySelectorAll('.gaveta-header');
     
     headers.forEach(function(header) {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Adiciona eventos de exemplo para a barra lateral (opcional)
+   
     const showButton = document.querySelector('#show-sidebar');
     const hideButton = document.querySelector('#hide-sidebar');
 

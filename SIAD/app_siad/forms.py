@@ -14,12 +14,12 @@ class InscricaoDivisaoForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         if grupo_id:
-            # Atualiza o queryset de atletas com base no grupo_id
+            
             self.fields['atleta'].queryset = Atleta.objects.filter(
                 atletagrupodivisao__grupo__id=grupo_id
             ).distinct()
 
-            # Atualiza o queryset de divisões com base no grupo_id
+
             self.fields['divisao'].queryset = Divisao.objects.filter(
                 modalidade__edicao_evento__grupos__id=grupo_id
             ).distinct()

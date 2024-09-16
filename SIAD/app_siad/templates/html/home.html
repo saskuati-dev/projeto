@@ -10,7 +10,7 @@
         {% if noticia.imagem %}
             <img src="{{ noticia.imagem.url }}" alt="{{ noticia.titulo }}" class="responsive-image" style="max-width: 400px; height: auto;">
         {% endif %}
-        <!-- Renderize o texto da notícia como HTML -->
+        
         <p>{{ noticia.texto|safe }}</p>
         <p style="margin-top: 15px; margin-bottom: 0px"><small>Criado em: {{ noticia.criado_em|date:"d/m/Y H:i" }}</small></p>
     </div>
