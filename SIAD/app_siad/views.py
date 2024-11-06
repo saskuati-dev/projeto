@@ -3,30 +3,39 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from .forms import AtletaForm,AtletaDivisaoForm, InscricaoDivisaoForm,RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
-from .models import Atleta, Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao, RepresentanteEsportivo, AtletaGrupoDivisao
+from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
+from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao
 import logging
 import os
 from django.conf import settings
-from django.http import HttpResponseForbidden, HttpResponseBadRequest
 from django.contrib import messages
+from django.utils import timezone
 
 
 @login_required(login_url='login')
 def evento_detalhes(request, evento_id):
+    # Verificar se o usuário tem permissão de administrador
     if not is_admin_esportivo(request.user):
         return redirect('home')
-    evento = get_object_or_404(EdicaoEvento, id=evento_id)
     
+    # Buscar evento, grupos, modalidades e divisões
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
     grupos = Grupo.objects.filter(edicao_evento=evento)
     modalidades = Modalidade.objects.filter(edicao_evento=evento)
     divisoes = Divisao.objects.filter(modalidade__edicao_evento=evento)
     
+    # Inicializar os formulários
+    grupo_form = GrupoForm()
+    modalidade_form = ModalidadeForm()
+    divisao_form = DivisaoForm()
+
+    # Verificar se a requisição é POST para manipular os formulários
     if request.method == 'POST':
+        # Manipulação de Grupo
         if 'add_grupo' in request.POST:
-            form = GrupoForm(request.POST)
-            if form.is_valid():
-                grupo = form.save(commit=False)
+            grupo_form = GrupoForm(request.POST)
+            if grupo_form.is_valid():
+                grupo = grupo_form.save(commit=False)
                 grupo.edicao_evento = evento
                 grupo.save()
                 messages.success(request, "Grupo adicionado com sucesso!")
@@ -35,9 +44,9 @@ def evento_detalhes(request, evento_id):
         elif 'edit_grupo' in request.POST:
             grupo_id = request.POST.get('grupo_id')
             grupo = get_object_or_404(Grupo, id=grupo_id)
-            form = GrupoForm(request.POST, instance=grupo)
-            if form.is_valid():
-                form.save()
+            grupo_form = GrupoForm(request.POST, instance=grupo)
+            if grupo_form.is_valid():
+                grupo_form.save()
                 messages.success(request, "Grupo editado com sucesso!")
                 return redirect('detalhes_evento', evento_id=evento_id)
         
@@ -48,10 +57,11 @@ def evento_detalhes(request, evento_id):
             messages.success(request, "Grupo removido com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
         
-        if 'add_modalidade' in request.POST:
-            form = ModalidadeForm(request.POST)
-            if form.is_valid():
-                modalidade = form.save(commit=False)
+        # Manipulação de Modalidade
+        elif 'add_modalidade' in request.POST:
+            modalidade_form = ModalidadeForm(request.POST)
+            if modalidade_form.is_valid():
+                modalidade = modalidade_form.save(commit=False)
                 modalidade.edicao_evento = evento
                 modalidade.save()
                 messages.success(request, "Modalidade adicionada com sucesso!")
@@ -60,9 +70,9 @@ def evento_detalhes(request, evento_id):
         elif 'edit_modalidade' in request.POST:
             modalidade_id = request.POST.get('modalidade_id')
             modalidade = get_object_or_404(Modalidade, id=modalidade_id)
-            form = ModalidadeForm(request.POST, instance=modalidade)
-            if form.is_valid():
-                form.save()
+            modalidade_form = ModalidadeForm(request.POST, instance=modalidade)
+            if modalidade_form.is_valid():
+                modalidade_form.save()
                 messages.success(request, "Modalidade editada com sucesso!")
                 return redirect('detalhes_evento', evento_id=evento_id)
         
@@ -73,10 +83,11 @@ def evento_detalhes(request, evento_id):
             messages.success(request, "Modalidade removida com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
         
-        if 'add_divisao' in request.POST:
-            form = DivisaoForm(request.POST)
-            if form.is_valid():
-                divisao = form.save(commit=False)
+        # Manipulação de Divisão
+        elif 'add_divisao' in request.POST:
+            divisao_form = DivisaoForm(request.POST)
+            if divisao_form.is_valid():
+                divisao = divisao_form.save(commit=False)
                 divisao.save()
                 messages.success(request, "Divisão adicionada com sucesso!")
                 return redirect('detalhes_evento', evento_id=evento_id)
@@ -84,9 +95,9 @@ def evento_detalhes(request, evento_id):
         elif 'edit_divisao' in request.POST:
             divisao_id = request.POST.get('divisao_id')
             divisao = get_object_or_404(Divisao, id=divisao_id)
-            form = DivisaoForm(request.POST, instance=divisao)
-            if form.is_valid():
-                form.save()
+            divisao_form = DivisaoForm(request.POST, instance=divisao)
+            if divisao_form.is_valid():
+                divisao_form.save()
                 messages.success(request, "Divisão editada com sucesso!")
                 return redirect('detalhes_evento', evento_id=evento_id)
         
@@ -96,12 +107,8 @@ def evento_detalhes(request, evento_id):
             divisao.delete()
             messages.success(request, "Divisão removida com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
-    
-    else:
-        grupo_form = GrupoForm()
-        modalidade_form = ModalidadeForm()
-        divisao_form = DivisaoForm()
 
+    # Contexto a ser passado para o template
     context = {
         'evento': evento,
         'grupos': grupos,
@@ -112,8 +119,17 @@ def evento_detalhes(request, evento_id):
         'divisao_form': divisao_form,
     }
 
+    # Renderizando o template com o contexto
     return render(request, 'html/detalhes_evento.html', context)
 
+def detalhes_user(request, grupo_id, evento_id): 
+    grupo = get_object_or_404(Grupo, id=grupo_id)
+    evento = get_object_or_404(EdicaoEvento, id= evento_id)
+    return render(request, 'html/grupo_user.html', {
+        'grupo': grupo,
+        'evento':evento
+    })
+    
 @login_required(login_url='login')
 def upload_edital(request, evento_id):
     if not is_admin_esportivo(request.user):
@@ -176,6 +192,7 @@ def criar_evento(request):
                 cidade=form.cleaned_data['cidade'],
                 data_inicio=form.cleaned_data['data_inicio'],
                 data_fim=form.cleaned_data['data_fim'],
+                data_fim_inscricao=form.cleaned_data['data_fim_inscricao'],
                 evento_original=evento_original
             )
             
@@ -263,6 +280,7 @@ def user(request):
         'eventos': eventos,
     }
     return render(request, 'html/user.html', context)
+    
 
 @login_required(login_url='login')
 def adm(request): 
@@ -291,7 +309,7 @@ def eventos_view(request):
 
 
 def home(request):
-    
+    noticias = Noticia.objects.filter(data_fim__gt=timezone.now())
     noticias = Noticia.objects.all().order_by('-criado_em')
     return render(request, 'html/home.html', {'noticias': noticias})
 
@@ -352,3 +370,4 @@ def gerenciar(request):
         return redirect('adm')
         
      return redirect('user')
+

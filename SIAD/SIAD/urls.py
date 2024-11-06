@@ -20,6 +20,7 @@ urlpatterns = [
     path('tinymce/', include('tinymce.urls')),
     path('criar-evento/', views.criar_evento, name='criar_evento'),
     path('grupo/<int:grupo_id>/', views.detalhes_grupo, name='detalhes_grupo'),
+    path('detalhes_user/<int:evento_id>/<int:grupo_id>/', views.detalhes_user, name='detalhes_user'),
     path('upload_edital/<int:evento_id>/', views.upload_edital, name='upload_edital'),
     path('detalhes_evento/<int:evento_id>/', views.evento_detalhes, name='detalhes_evento'),
     path('noticias/', views.noticias, name='noticias'),

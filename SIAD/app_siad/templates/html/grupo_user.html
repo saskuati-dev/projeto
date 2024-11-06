@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% block title %}Detalhes {{ grupo.nome }}{% endblock %}
+
+{% block userinfo %}
+<div class="container">
+    <h1>{{ grupo.nome }}</h1>
+    <p><strong>Descrição: </strong>{{ grupo.descricao_grupo }}</p>
+    <p><strong>Taxa:</strong> {{ grupo.taxa }}</p>
+    <p><strong>Data final para Inscrição:</strong> {{ evento.data_fim_inscricao }}</p>
+    {% if evento.data_fim_inscricao|date:"Y-m-d" > now|date:"Y-m-d" %}
+        <div style="text-align: right; margin-right:10px;">
+            <button>Inscrever-se</button>
+        </div>
+    {% else %}
+        <p>A inscrição foi encerrada.</p>
+    {% endif %}
+
+    
+    
+
+{%endblock%}

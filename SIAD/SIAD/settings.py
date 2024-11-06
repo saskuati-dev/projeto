@@ -24,6 +24,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'gerencianet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -119,7 +120,7 @@ STATICFILES_DIRS = [
 ]
 LOGIN_REDIRECT_URL = '/user/'  # Redireciona usuários comuns
 
-# Default primary key field type
+# Default primary key field 
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -145,3 +146,6 @@ LOGGING = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'  
 LOGOUT_REDIRECT_URL = 'home'
+DATE_INPUT_FORMATS = ('%d-%m-%Y','%Y-%m-%d')
+DECIMAL_SEPARATOR = ','
+USE_THOUSAND_SEPARATOR = True

@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from tinymce.widgets import TinyMCE
 from .models import Atleta,Edital,EdicaoEvento, EventoOriginal, Noticia, RepresentanteEsportivo, EdicaoEvento, Grupo, Modalidade, Divisao
-
+from django.conf import settings
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class InscricaoDivisaoForm(forms.Form):
     atleta = forms.ModelChoiceField(queryset=Atleta.objects.none(), label='Atleta')
@@ -62,7 +64,6 @@ class DivisaoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Adiciona um queryset personalizado se necessário
         self.fields['modalidade'].queryset = Modalidade.objects.all()
 
 class ModalidadeForm(forms.ModelForm):
@@ -76,6 +77,7 @@ class EventoOriginalForm(forms.ModelForm):
         fields = ['nome']
 
 class EdicaoEventoForm(forms.ModelForm):
+    
     evento_original = forms.ModelChoiceField(
         queryset=EventoOriginal.objects.all(),
         empty_label="Escolha um evento original ou crie um novo",
@@ -86,29 +88,75 @@ class EdicaoEventoForm(forms.ModelForm):
         required=False,
         label="Criar novo evento original"
     )
-
+    data_inicio = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        input_formats=settings.DATE_INPUT_FORMATS
+    )
+    data_fim = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        input_formats=settings.DATE_INPUT_FORMATS
+    )
+    data_fim_inscricao = forms.DateField(
+        label="Data final para inscrição:",
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        input_formats=settings.DATE_INPUT_FORMATS
+    )
+    
     class Meta:
         model = EdicaoEvento
-        fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim']
+        fields = ['edicao', 'local', 'descricao', 'cidade', 'data_inicio', 'data_fim', 'data_fim_inscricao']
 
     def clean(self):
         cleaned_data = super().clean()
-        evento_original = cleaned_data.get('evento_original')
-        novo_evento_original = cleaned_data.get('novo_evento_original')
+        data_fim_inscricao = cleaned_data.get('data_fim_inscricao')  # Acessando o campo correto
+        data_inicio = cleaned_data.get('data_inicio')
+        data_fim = cleaned_data.get('data_fim')
 
-        if not evento_original and not novo_evento_original:
-            raise forms.ValidationError("Você deve escolher um evento original ou criar um novo.")
+        # Verificação da data de fim da inscrição
+        if not data_fim_inscricao:
+            raise forms.ValidationError("O campo 'Data final para inscrição' é obrigatório.")  # Verificando se o campo é preenchido
 
-        if not evento_original and novo_evento_original:
-            if EventoOriginal.objects.filter(nome=novo_evento_original).exists():
-                raise forms.ValidationError("Um evento original com esse nome já existe.")
+        if data_fim_inscricao and data_inicio and data_fim:
+            if data_inicio >= data_fim_inscricao:
+                raise forms.ValidationError("A data final de inscrição não pode ser anterior à data de início.")
+            if data_fim_inscricao >= data_fim:
+                raise forms.ValidationError("A data final de inscrição não pode ser posterior à data final do evento.")
 
         return cleaned_data
-    
+
 class GrupoForm(forms.ModelForm):
+    taxa = forms.DecimalField(
+        label="Taxa (R$):",
+        max_digits=10,
+        decimal_places=2,
+        localize=True
+    )
     class Meta:
+        
         model = Grupo
         fields = ['nome', 'descricao_grupo', 'taxa']
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome')
+
+        # Converte o nome para maiúsculas
+        nome_upper = nome.upper()
+
+        # Verifica se já existe algum grupo com o nome em maiúsculas
+        if Grupo.objects.filter(nome=nome_upper).exists():
+            raise ValidationError(f"Já existe um grupo com o nome '{nome_upper}'.")
+        
+        return nome_upper
+
+    # Sobrescrevendo o método clean() para garantir que o nome seja armazenado em maiúsculas
+    def clean(self):
+        cleaned_data = super().clean()
+        nome = cleaned_data.get('nome')
+
+        if nome:
+            # Converte o nome para maiúsculas
+            cleaned_data['nome'] = nome.upper()
+
+        return cleaned_data
         
 def validar_cpf(cpf):
     cpf = ''.join([char for char in cpf if char.isdigit()])  
@@ -130,15 +178,16 @@ def validar_cpf(cpf):
     return True
 
 class RepresentanteRegistroForm(forms.ModelForm):
-    username = forms.CharField(label="CPF", max_length=11)
+    username = forms.CharField(label="CPF:", max_length=11)
     representacao = forms.CharField(label="Representação:")
-    email = forms.EmailField(label="Email")
-    password = forms.CharField(label="Senha", widget=forms.PasswordInput)
-    nome = forms.CharField(label="Nome", max_length=100)
-    telefone = forms.CharField(label="Telefone", max_length=20)
-    documento = forms.FileField(label="Termo de Compromisso Assinado")
-    rg = forms.CharField(label="RG", max_length=20)
-    dados_escola = forms.CharField(label="Dados da Escola",  widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
+    email = forms.EmailField(label="Email:")
+    password = forms.CharField(label="Senha:", widget=forms.PasswordInput)
+    password_confirm = forms.CharField(label="Confirme a Senha: ", widget=forms.PasswordInput)    
+    nome = forms.CharField(label="Nome:", max_length=100)
+    telefone = forms.CharField(label="Telefone:", max_length=20)
+    documento = forms.FileField(label="Termo de Compromisso Assinado:")
+    rg = forms.CharField(label="RG:", max_length=20)
+    dados_escola = forms.CharField(label="Detalhes:",  widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
 
     class Meta:
         model = RepresentanteEsportivo
@@ -164,6 +213,15 @@ class RepresentanteRegistroForm(forms.ModelForm):
             raise forms.ValidationError("Telefone já cadastrado.")
         return telefone
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("As senhas são diferentes.")
+
+        return cleaned_data
     def save(self, commit=True):
         user = User.objects.create_user(
             username=self.cleaned_data['username'],
@@ -184,9 +242,20 @@ class RepresentanteLoginForm(AuthenticationForm):
 
 
 class NoticiaForm(forms.ModelForm):
+    data_fim = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        input_formats=settings.DATE_INPUT_FORMATS
+    )
+
     class Meta:
         model = Noticia
-        fields = ['titulo', 'texto', 'imagem']
+        fields = ['titulo', 'texto', 'imagem', 'data_fim']
         widgets = {
             'texto': TinyMCE(attrs={'cols': 80, 'rows': 30}),
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        data_fim = cleaned_data.get('data_fim')
+        if data_fim < timezone.now().date():
+            raise forms.ValidationError("A data de expiração da noticia deve ser hoje ou uma data futura.")

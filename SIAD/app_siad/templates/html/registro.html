@@ -4,11 +4,39 @@
 {% block userinfo %}
 <div class="login-container">
     <h2>Registrar-se</h2>
-    <form method="post" enctype="multipart/form-data"class="form-registro">
+    <form method="post" enctype="multipart/form-data" class="form-registro">
         {% csrf_token %}
-        {{ form.as_p }}
+        
+        <label class="label-style">{{ form.username.label }}</label>
+            {{ form.username }}<br>
+
+        <label class="label-style">{{ form.representacao.label }} </label>
+        {{ form.representacao }}<br>
+        
+        <label class="label-style">{{ form.telefone.label }} </label>
+        {{ form.telefone }}<br>
+
+        <label class="label-style">{{ form.email.label }}</label>
+        {{ form.email }}<br>
+        
+        <label class="label-style">{{ form.documento.label }}</label>
+        {{ form.documento }}
+        <span><a href="{% url 'download_document' %}">Baixar termo</a></span><br><br>
+        
+
+        <label class="label-style">{{ form.rg.label }}</label>
+        {{ form.rg }}<br>
+
+
+        <label class="label-style">{{ form.dados_escola.label }}</label>
+        {{ form.dados_escola }}<br>
+        
+        <label class="label-style">{{form.password.label}}</label>
+        {{form.password}}<br>
+        
+        <label class="label-style">{{ form.password_confirm.label }}</label>
+        {{ form.password_confirm }}<br>
         <button type="submit">Registrar</button>
-        <span> <a href="{% url 'download_document' %}">Baixar termo de compromisso</a></span>
     </form>
 </div>
 {% endblock %}

@@ -15,9 +15,7 @@
                 <ul>
                     {% for grupo in evento.grupos.all|dictsort:"nome" %}
                         <ul>
-                            <a href="{% url 'detalhes_grupo' grupo.id %}">{{ grupo.nome }}</a>
-                           
-                                <button>Inscrever-se</button>
+                            <a href="{% url 'detalhes_user' grupo.id evento.id %}">{{ grupo.nome }}</a>
                             
                         </ul>
                     {% empty %}
@@ -26,7 +24,7 @@
                 </ul>
                 <div style="text-align: right; margin-right:10px;">
                     {% if evento.id %}
-                        <a href="{% url 'detalhes_evento' evento.id %}">
+                        <a href="{% url 'editais' %}">
                             <button>Ver Detalhes do Evento</button>
                         </a>
                     {% else %}

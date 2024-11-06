@@ -1,5 +1,5 @@
 {% extends "base/base.html" %}
-{% block title %}Postar Edital{% endblock %}
+{% block title %}Detalhes {{ grupo.nome }}{% endblock %}
 
 {% block userinfo %}
 <div class="container">
@@ -27,7 +27,7 @@
                 </div>
             </ul>
         {% empty %}
-            <p>Este grupo não possui divisões.</p>
+            <p>Este grupo ainda não possui divisões.</p>
         {% endfor %}
     </ul>
 {%endblock%}

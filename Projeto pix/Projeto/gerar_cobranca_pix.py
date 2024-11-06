@@ -9,14 +9,14 @@ body = {
         'expiracao': 600
     },
     'devedor': {
-        'cpf': '13528915900',
+        'cpf': '13882396989',
         'nome': 'João Carneiro'
     },
     'valor': {
-        'original': '0.01'
+        'original': '0.02'
     },
     'chave': '44ee453e-c14d-40c5-b7fd-8cca0bf55c70',
-    'solicitacaoPagador': 'Cobrançaa por cada atleta inscito.'
+    'solicitacaoPagador': 'Cobrança por cada atleta inscito.'
 }
 
 response =  gn.pix_create_immediate_charge(body=body)

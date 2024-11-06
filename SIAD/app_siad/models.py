@@ -9,6 +9,7 @@ class Noticia(models.Model):
     texto = models.TextField()
     imagem = models.ImageField(upload_to='noticias/', blank=True, null=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    data_fim = models.DateField()
 
     class Meta:
         ordering = ['-criado_em']  
@@ -28,6 +29,7 @@ class EdicaoEvento(models.Model):
     cidade = models.CharField(max_length=100)
     data_inicio = models.DateField()
     data_fim = models.DateField()
+    data_fim_inscricao = models.DateField()
     evento_original = models.ForeignKey(EventoOriginal, on_delete=models.CASCADE)
 
     def get_grupos(self):
@@ -73,7 +75,7 @@ class Atleta(models.Model):
 class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     descricao_grupo = models.TextField()
-    taxa = models.DecimalField(max_digits=10, decimal_places=2)
+    taxa = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     edicao_evento = models.ForeignKey(EdicaoEvento, related_name='grupos', on_delete=models.CASCADE)
 
     def __str__(self):
