@@ -62,15 +62,38 @@ class DivisaoForm(forms.ModelForm):
         model = Divisao
         fields = ['tipo_divisao', 'minAtleta', 'maxAtleta', 'modalidade']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['modalidade'].queryset = Modalidade.objects.all()
+    # Campo oculto para associar a divisão ao grupo
+    grupo_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
+    def __init__(self, *args, **kwargs):
+        grupo_id = kwargs.pop('grupo_id', None)
+        super().__init__(*args, **kwargs)
+
+        # Se o grupo_id for passado, preenche o campo oculto
+        if grupo_id:
+            self.fields['grupo_id'].initial = grupo_id
+
+    def save(self, commit=True):
+        divisao = super().save(commit=False)
+        grupo_id = self.cleaned_data.get('grupo_id')
+
+        # Se o grupo_id foi passado, associamos a divisão ao grupo
+        if grupo_id:
+            grupo = Grupo.objects.get(id=grupo_id)
+            divisao.grupo = grupo
+
+        if commit:
+            divisao.save()
+
+        return divisao
 class ModalidadeForm(forms.ModelForm):
     class Meta:
         model = Modalidade
         fields = ['nome', 'regras_modalidade', 'local', 'categoria']
 
+        def clean(self):
+            nome = self.cleaned_data.get('nome')
+            return nome.upper() if nome else nome
 class EventoOriginalForm(forms.ModelForm):
     class Meta:
         model = EventoOriginal

@@ -1,0 +1,18 @@
+{% extends 'base/base.html' %}
+{% block title %}Apagar evento{{ grupo.nome }}{% endblock %}
+
+{% block userinfo %}
+
+
+<div class='container'>
+  <h1>Confirmar exclusão do evento {{evento.edicao}}</h1>
+  <p>Você tem certeza de que deseja excluir este evento?</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="evento_id" value="{{ evento.id }}">
+    <button type="submit" name="confirmar" value="sim">Sim, excluir</button>
+    <a href="{% url 'adm' %}"><button type="button">Cancelar</button></a>
+  </form>
+</div>
+{% endblock %}

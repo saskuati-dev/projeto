@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Editar Divisoes{% endblock %}
+{% block userinfo %}
+<div class="container">
+  <h1>Editar Divisões do Grupo: {{ grupo.nome }}</h1>
+
+  <h2>Divisões Existentes</h2>
+  <form method="POST" action="{% url 'editar_divisoes' grupo_id=grupo.id evento_id=evento.id %}">
+    {% csrf_token %}
+    <table border='1' cellpadding="4" cellspacing="1">
+      <thead>
+        <tr>
+            <th></th>
+            <th>Modalidade</th>
+            <th>Tipo</th>
+            <th>Min. Atletas</th>
+            <th>Max. Atletas</th>
+            <th>Categoria</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for divisao in divisoes %}
+        <tr>
+            <td><input type="checkbox" name="divisoes" value="{{ divisao.id }}" /></td> <!-- Checkbox para selecionar divisão -->
+            <td>{{ divisao.modalidade.nome }}</td>
+            <td>{{ divisao.get_tipo_divisao_display }}</td>
+            <td>{{ divisao.minAtleta }}</td>
+            <td>{{ divisao.maxAtleta }}</td>
+            <td>{{ divisao.modalidade.get_categoria_display }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">Nenhuma divisão encontrada.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit" name="action" value="delete" class="btn btn-danger">Excluir Divisões Selecionadas</button>
+  </form>
+
+  <h3 style="margin-top:20px;">Adicionar Nova Modalidade</h3>
+  <form method="POST" class="form-evento">
+    {% csrf_token %}
+    <div class="form-evento">
+      {{ divisao_form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-primary">Salvar Divisão</button>
+  </form>
+</div>
+
+
+{% endblock %}

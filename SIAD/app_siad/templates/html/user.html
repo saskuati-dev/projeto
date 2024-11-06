@@ -15,7 +15,7 @@
                 <ul>
                     {% for grupo in evento.grupos.all|dictsort:"nome" %}
                         <ul>
-                            <a href="{% url 'detalhes_user' grupo.id evento.id %}">{{ grupo.nome }}</a>
+                            <a href="{% url 'detalhes_user' evento.id grupo.id %}">{{ grupo.nome }}</a>
                             
                         </ul>
                     {% empty %}

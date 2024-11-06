@@ -48,3 +48,19 @@ document.addEventListener('DOMContentLoaded', function() {
         hideButton.addEventListener('click', hideSidebar);
     }
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Selecionar o checkbox "marcar/desmarcar todas"
+    const selectAllCheckbox = document.getElementById('select-all');
+  
+    // Adicionar evento para "marcar/desmarcar tudo"
+    selectAllCheckbox.addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('input[name="divisoes"]');
+      checkboxes.forEach(function(checkbox) {
+        checkbox.checked = selectAllCheckbox.checked;
+      });
+    });
+  });
+  
+  

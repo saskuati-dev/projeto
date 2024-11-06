@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagar via PIX</title>
+    <style>
+        /* Seu estilo aqui... */
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Pagamento via PIX</h1>
+
+        <form id="payment-form">
+            <label for="valor">Valor:</label>
+            <input type="number" id="valor" name="valor" placeholder="Valor do pagamento" required>
+
+            <label for="nome">Nome do Pagador:</label>
+            <input type="text" id="nome" name="nome" placeholder="Seu nome" required>
+
+            <label for="email">E-mail do Pagador:</label>
+            <input type="email" id="email" name="email" placeholder="Seu e-mail" required>
+
+            <button type="submit">Gerar QR Code</button>
+        </form>
+
+        <div class="qr-code" id="qr-code-container"></div>
+
+        <div class="status" id="status-container"></div>
+    </div>
+
+    <script>
+        // Captura o token CSRF do cookie
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        document.getElementById("payment-form").addEventListener("submit", function(event) {
+            event.preventDefault(); // Impede o envio do formulário para testar via AJAX
+
+            // Obtendo os valores do formulário
+            const valor = document.getElementById("valor").value;
+            const nome = document.getElementById("nome").value;
+            const email = document.getElementById("email").value;
+
+            // Enviar o formulário via fetch com CSRF token no cabeçalho
+            fetch('/criar-pagamento-pix/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken  // Adiciona o token CSRF no cabeçalho
+                },
+                body: JSON.stringify({
+                    valor: valor,
+                    nome: nome,
+                    email: email
+                })
+            })
+            .then(response => {
+                // Verifique se a resposta é JSON
+                return response.json()
+                    .then(data => {
+                        if (response.ok) {
+                            // Resposta válida, com sucesso
+                            if (data.qr_code) {
+                                document.getElementById("qr-code-container").innerHTML = `
+                                    <h3>QR Code para pagamento:</h3>
+                                    <img src="data:image/png;base64,${data.qr_code}" alt="QR Code" style="width: 200px; height: 200px;">
+                                `;
+                                document.getElementById("status-container").innerHTML = `
+                                    <button onclick="verificarStatusPagamento('${data.id_cobranca}')">Verificar Status do Pagamento</button>
+                                `;
+                            } else {
+                                alert('Erro ao gerar o pagamento. Tente novamente.');
+                            }
+                        } else {
+                            // Se a resposta não for ok, mostra o erro
+                            alert('Erro: ' + (data.error || data.message || 'Erro desconhecido'));
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erro ao realizar pagamento: ' + error);
+                    });
+            })
+            .catch(error => {
+                console.error('Erro ao enviar solicitação para o servidor:', error);
+                alert('Erro ao enviar a solicitação.');
+            });
+        });
+
+        // Função para verificar o status do pagamento
+        function verificarStatusPagamento(idCobranca) {
+            fetch(`/verificar-pagamento/${idCobranca}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'paid') {
+                    document.getElementById("status-container").innerHTML = "Pagamento efetuado com sucesso!";
+                } else {
+                    document.getElementById("status-container").innerHTML = "Pagamento ainda não realizado.";
+                }
+            })
+            .catch(error => {
+                alert('Erro ao verificar status: ' + error);
+            });
+        }
+    </script>
+
+</body>
+</html>

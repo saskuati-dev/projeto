@@ -15,7 +15,9 @@
         <p style="margin-top: 15px; margin-bottom: 0px"><small>Criado em: {{ noticia.criado_em|date:"d/m/Y H:i" }}</small></p>
     </div>
     {% empty %}
-        <li>Nenhuma notícia encontrada.</li>
+    <div class="container">
+        <h1>Nenhuma notícia encontrada</h1>
+    </div>
     {% endfor %}
 </ul>
 

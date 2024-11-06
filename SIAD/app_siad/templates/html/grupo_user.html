@@ -5,17 +5,46 @@
 <div class="container">
     <h1>{{ grupo.nome }}</h1>
     <p><strong>Descrição: </strong>{{ grupo.descricao_grupo }}</p>
-    <p><strong>Taxa:</strong> {{ grupo.taxa }}</p>
+    <p><strong>Taxa:</strong> R${{ grupo.taxa }}</p>
     <p><strong>Data final para Inscrição:</strong> {{ evento.data_fim_inscricao }}</p>
+    <br>
+
+    <h2>Divisões do Grupo</h2>
+    <br>
+
+    <table border="1" cellpadding="4" cellspacing="1">
+        <thead>
+            <tr>
+                <th>Modalidade</th>
+                <th>Tipo</th>
+                <th>Min. Atletas</th>
+                <th>Max. Atletas</th>
+                <th>Categoria</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for divisao in divisoes %}
+            <tr>
+                <td>{{ divisao.modalidade.nome }}</td>
+                <td>{{ divisao.get_tipo_divisao_display }}</td>
+                <td>{{ divisao.minAtleta }}</td>
+                <td>{{ divisao.maxAtleta }}</td>
+                <td>{{ divisao.modalidade.get_categoria_display }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Nenhuma divisão encontrada para este grupo.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     {% if evento.data_fim_inscricao|date:"Y-m-d" > now|date:"Y-m-d" %}
         <div style="text-align: right; margin-right:10px;">
             <button>Inscrever-se</button>
         </div>
     {% else %}
-        <p>A inscrição foi encerrada.</p>
+        <h1>A inscrição foi encerrada.</h1>
     {% endif %}
-
-    
-    
-
-{%endblock%}
+</div>
+{% endblock %}

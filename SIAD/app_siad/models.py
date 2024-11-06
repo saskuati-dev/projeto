@@ -63,6 +63,10 @@ class Divisao(models.Model):
     maxAtleta = models.PositiveIntegerField(default=1)
     tipo_divisao = models.CharField(max_length=1,default='', choices=tipo)
     modalidade = models.ForeignKey(Modalidade, on_delete=models.CASCADE)
+    grupo = models.ForeignKey('Grupo', on_delete=models.CASCADE, related_name="divisoes")  # Aqui associamos a divisão ao grupo
+
+    def __str__(self):
+        return self.tipo_divisao
 
 class Atleta(models.Model):
     nome = models.CharField(max_length=100)

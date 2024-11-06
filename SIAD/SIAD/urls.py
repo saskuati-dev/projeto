@@ -19,12 +19,14 @@ urlpatterns = [
     path('eventos/', views.eventos_view, name='eventos_view'),
     path('tinymce/', include('tinymce.urls')),
     path('criar-evento/', views.criar_evento, name='criar_evento'),
-    path('grupo/<int:grupo_id>/', views.detalhes_grupo, name='detalhes_grupo'),
+    path('grupo/<int:evento_id>/<int:grupo_id>/', views.detalhes_grupo, name='detalhes_grupo'),
     path('detalhes_user/<int:evento_id>/<int:grupo_id>/', views.detalhes_user, name='detalhes_user'),
     path('upload_edital/<int:evento_id>/', views.upload_edital, name='upload_edital'),
     path('detalhes_evento/<int:evento_id>/', views.evento_detalhes, name='detalhes_evento'),
     path('noticias/', views.noticias, name='noticias'),
-    path('gerenciar/', views.gerenciar, name='gerenciar')
+    path('gerenciar/', views.gerenciar, name='gerenciar'),
+    path('editar_divisoes/<int:evento_id>/<int:grupo_id>/', views.editar_divisoes, name="editar_divisoes" ),
+    path('evento/<int:evento_id>/excluir_evento/', views.excluir_evento, name='excluir_evento'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

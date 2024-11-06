@@ -1,6 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
-{%block title%} Detalhes do Evento {%endblock%}
+{% block title %} Detalhes do Evento {% endblock %}
 {% block userinfo %}
 <div class="container">
     <h1>Detalhes do Evento: {{ evento.edicao }}</h1>
@@ -12,20 +12,34 @@
     
     <h2 class="gaveta-header">Grupos</h2>
     <div class="gaveta-content">
-    <ul>
-        {% for grupo in grupos %}
-        <ul>
-            {{ grupo.nome }} 
-            <form method="POST" style="display:inline; "class="form-evento">
-                {% csrf_token %}
-                <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
-                <button type="submit" name="delete_grupo">Excluir</button>
-                <hr width="100%" size="2">
+        <form method="POST" action="{% url 'detalhes_evento' evento.id%}">
+            {% csrf_token %}
+            <table border='1' cellpadding="4" cellspacing="1">
+              <thead>
+                <tr>
+                    <th></th>
+                    <th>Grupo</th>
+                    <th>Taxa (R$)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for grupo in grupos %}
+                <tr>
+                    <td><input type="checkbox" name="grupos" value="{{ grupo.id }}" /></td> <!-- Checkbox para selecionar divisão -->
+                    <td>{{ grupo.nome }}</td>
+                    <td>{{ grupo.taxa }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3"> Nenhum Grupo Encontrado.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {%if grupos%}
+                <button type="submit" name="action" value="delete" class="btn btn-danger">Excluir Grupos Selecionados</button>
+            {%endif%}
             </form>
-            
-        </ul>
-        {% endfor %}
-    </ul>
 </div>
 
     <h3>Adicionar Novo Grupo</h3>
@@ -37,53 +51,52 @@
 
     <h2 class="gaveta-header">Modalidades</h2>
     <div class="gaveta-content">
-    <ul>
-        {% for modalidade in modalidades %}
-        <ul>
-            {{ modalidade.nome }} {{ modalidade.categoria}}- {{ modalidade.local }}
-            <form method="POST" style="display:inline;">
-                {% csrf_token %}
-                <input type="hidden" name="modalidade_id" value="{{ modalidade.id }}">
-                <a ><button type="submit" name="delete_modalidade" >Excluir</button></a>
-                <hr width="100%" size="2">
+        <form method="POST" action="{% url 'detalhes_evento' evento.id %}">
+            {% csrf_token %}
+            <table border="1" cellpadding="4" cellspacing="1">
+                <thead>
+                    <tr>
+                        <th></th> <!-- Coluna para o checkbox -->
+                        <th>Nome</th>
+                        <th>Local</th>
+                        <th>Categoria</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for modalidade in modalidades %}
+                        <tr>
+                            <td><input type="checkbox" name="modalidades" value="{{ modalidade.id }}" /></td> <!-- Checkbox para selecionar -->
+                            <td>{{ modalidade.nome }}</td>
+                            <td>{{ modalidade.local }}</td>
+                            <td>{{modalidade.get_categoria_display}}</td>
+                                <!-- Formulário para excluir a modalidade -->
+                                <form method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="modalidade_id" value="{{ modalidade.id }}">
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">Nenhuma modalidade encontrada.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if modalidades %}
+                <button type="submit" name="delete_modalidade" class="btn btn-danger">Excluir</button>
+            {% endif%}
             </form>
-            
-        </ul>
-        {% endfor %}
-    </ul>
-</div>
+        
+    </div>
     <h3>Adicionar Nova Modalidade</h3>
-    <form method="POST"class="form-evento">
+    <form method="POST" class="form-evento">
         {% csrf_token %}
         {{ modalidade_form.as_p }}
         <button type="submit" name="add_modalidade">Adicionar Modalidade</button>
     </form>
 
-    
-    <h2 class="gaveta-header">Divisões</h2>
-    <div class="gaveta-content">
-    <ul>
-        {% for divisao in divisoes %}
-        <ul> <b>Modalidade: {{ divisao.modalidade.nome }}</b><br>
-            Tipo: {{ divisao.get_tipo_divisao_display }} - {{ divisao.minAtleta }} a {{ divisao.maxAtleta }} atletas
-            
-            <form method="POST" style="display:inline;">
-                {% csrf_token %}
-                <input type="hidden" name="divisao_id" value="{{ divisao.id }}">
-                <button type="submit" name="delete_divisao">Excluir</button>
-                <hr width="100%" size="2">
-            </form>
-        </ul>
-        {% endfor %}
-    </ul>
-</div>
+    <h3>Excluir Evento</h3>
+    <a href="{% url 'excluir_evento' evento.id %}"><button>Excluir evento</button></a>
 
-    <h3>Adicionar Nova Divisão</h3>
-    <form method="POST">
-        {% csrf_token %}
-        {{ divisao_form.as_p }}
-        <button type="submit" name="add_divisao">Adicionar Divisão</button>
-    </form>
-
-</div>
-{%endblock%}
+{% endblock %}

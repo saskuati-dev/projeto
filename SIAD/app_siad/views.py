@@ -10,9 +10,18 @@ import os
 from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
+import shutil
+import json
+
+
+
+
+
+
 
 
 @login_required(login_url='login')
+
 def evento_detalhes(request, evento_id):
     # Verificar se o usuário tem permissão de administrador
     if not is_admin_esportivo(request.user):
@@ -22,12 +31,10 @@ def evento_detalhes(request, evento_id):
     evento = get_object_or_404(EdicaoEvento, id=evento_id)
     grupos = Grupo.objects.filter(edicao_evento=evento)
     modalidades = Modalidade.objects.filter(edicao_evento=evento)
-    divisoes = Divisao.objects.filter(modalidade__edicao_evento=evento)
     
     # Inicializar os formulários
     grupo_form = GrupoForm()
     modalidade_form = ModalidadeForm()
-    divisao_form = DivisaoForm()
 
     # Verificar se a requisição é POST para manipular os formulários
     if request.method == 'POST':
@@ -82,52 +89,83 @@ def evento_detalhes(request, evento_id):
             modalidade.delete()
             messages.success(request, "Modalidade removida com sucesso!")
             return redirect('detalhes_evento', evento_id=evento_id)
-        
-        # Manipulação de Divisão
-        elif 'add_divisao' in request.POST:
-            divisao_form = DivisaoForm(request.POST)
-            if divisao_form.is_valid():
-                divisao = divisao_form.save(commit=False)
-                divisao.save()
-                messages.success(request, "Divisão adicionada com sucesso!")
-                return redirect('detalhes_evento', evento_id=evento_id)
-        
-        elif 'edit_divisao' in request.POST:
-            divisao_id = request.POST.get('divisao_id')
-            divisao = get_object_or_404(Divisao, id=divisao_id)
-            divisao_form = DivisaoForm(request.POST, instance=divisao)
-            if divisao_form.is_valid():
-                divisao_form.save()
-                messages.success(request, "Divisão editada com sucesso!")
-                return redirect('detalhes_evento', evento_id=evento_id)
-        
-        elif 'delete_divisao' in request.POST:
-            divisao_id = request.POST.get('divisao_id')
-            divisao = get_object_or_404(Divisao, id=divisao_id)
-            divisao.delete()
-            messages.success(request, "Divisão removida com sucesso!")
-            return redirect('detalhes_evento', evento_id=evento_id)
 
-    # Contexto a ser passado para o template
+        # Manipulação de Exclusão do Evento
+        elif 'delete_evento' in request.POST:
+            evento.delete()
+            evento_folder = os.path.join(settings.MEDIA_ROOT, 'eventos', str(evento.edicao))  # Considerando que 'evento' tem o campo 'edicao'
+
+            if os.path.exists(evento_folder) and os.path.isdir(evento_folder):
+                shutil.rmtree(evento_folder)
+            return redirect('adm')
+        
+        elif  'action' in request.POST and request.POST['action'] == 'delete':
+            # Pegar os IDs dos grupos selecionados
+            grupo_ids = request.POST.getlist('grupos')
+            if grupo_ids:
+                # Excluir os grupos selecionados
+                grupos_a_excluir = Grupo.objects.filter(id__in=grupo_ids, edicao_evento=evento)
+                grupos_a_excluir.delete()
+                messages.success(request, "Grupos selecionados foram excluídos com sucesso!")
+            else:
+                messages.warning(request, "Nenhum grupo foi selecionado para exclusão.")
+            
+            # Redirecionar de volta para a página de detalhes do evento
+            return redirect('detalhes_evento', evento_id=evento_id)
+        
+        if 'delete_modalidade' in request.POST:
+            modalidade_id = request.POST.get('modalidade_id')
+            if modalidade_id:
+                modalidade = get_object_or_404(Modalidade, id=modalidade_id)
+                modalidade.delete()
+                messages.success(request, "Modalidade excluída com sucesso!")
+            return redirect('detalhes_evento', evento_id=evento_id)
+        
     context = {
         'evento': evento,
         'grupos': grupos,
         'modalidades': modalidades,
-        'divisoes': divisoes,
         'grupo_form': grupo_form,
         'modalidade_form': modalidade_form,
-        'divisao_form': divisao_form,
     }
 
-    # Renderizando o template com o contexto
     return render(request, 'html/detalhes_evento.html', context)
 
-def detalhes_user(request, grupo_id, evento_id): 
+def excluir_evento(request, evento_id):
+    # Obter o evento
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+
+    if request.method == 'POST':
+        # Verificar se o usuário confirmou a exclusão
+        if 'confirmar' in request.POST and request.POST['confirmar'] == 'sim':
+            # Excluir o evento
+            evento.delete()
+
+            # Deletar a pasta do evento
+            evento_folder = os.path.join(settings.MEDIA_ROOT, 'eventos', str(evento.edicao))
+            if os.path.exists(evento_folder) and os.path.isdir(evento_folder):
+                shutil.rmtree(evento_folder)
+
+            # Redirecionar para a página de administração após a exclusão
+            return redirect('adm')
+
+        # Se o usuário não confirmou, redireciona de volta
+        return redirect('adm')
+
+    return render(request, 'html/excluir_evento.html', {'evento': evento})
+
+@login_required(login_url='login')
+def detalhes_user(request, grupo_id, evento_id):
     grupo = get_object_or_404(Grupo, id=grupo_id)
-    evento = get_object_or_404(EdicaoEvento, id= evento_id)
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    
+    # Filtra as divisões associadas ao grupo específico
+    divisoes = Divisao.objects.filter(grupo=grupo)
+
     return render(request, 'html/grupo_user.html', {
         'grupo': grupo,
-        'evento':evento
+        'evento': evento,
+        'divisoes': divisoes  # Divisões associadas ao grupo
     })
     
 @login_required(login_url='login')
@@ -155,21 +193,77 @@ def upload_edital(request, evento_id):
     return render(request, 'html/upload_edital.html', context)
 
 @login_required(login_url='login')
-def detalhes_grupo(request, grupo_id):
+def detalhes_grupo(request, grupo_id, evento_id):
     if not is_admin_esportivo(request.user):
         logout(request)
         return redirect('home')
     
-    
-    
+    # Recupera o evento e o grupo
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
     grupo = get_object_or_404(Grupo, id=grupo_id)
-    
-    divisoes_com_atletas = grupo.listar_divisoes_com_atletas()
 
+    # Filtra as divisões associadas ao grupo
+    divisoes_do_grupo = Divisao.objects.filter(grupo=grupo)
+
+    # Recupera as modalidades do evento
+    modalidades = Modalidade.objects.filter(edicao_evento=evento)
+
+    # Retorna o contexto com as divisões associadas ao grupo
     return render(request, 'html/detalhes_grupo.html', {
         'grupo': grupo,
-        'divisoes_com_atletas': divisoes_com_atletas,
+        'divisoes_do_grupo': divisoes_do_grupo,  # Divisões associadas ao grupo
+        'evento': evento,
+        'modalidades': modalidades
     })
+
+
+@login_required(login_url='login')
+def editar_divisoes(request, grupo_id, evento_id):
+    if not is_admin_esportivo(request.user):
+        logout(request)
+        return redirect('home')
+    
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    grupo = get_object_or_404(Grupo, id=grupo_id)
+
+    modalidades = Modalidade.objects.filter(edicao_evento=evento)
+    divisoes = Divisao.objects.filter(grupo=grupo)
+
+    # Inicializar o formulário sempre, mesmo antes de qualquer ação
+    divisao_form = DivisaoForm(grupo_id=grupo.id)
+
+    if request.method == 'POST':
+        # Verificando se o botão de exclusão foi pressionado
+        if 'action' in request.POST and request.POST['action'] == 'delete':
+            divisao_ids = request.POST.getlist('divisoes')  # Obtém os IDs das divisões selecionadas
+
+            if divisao_ids:
+                divisoes_para_apagar = Divisao.objects.filter(id__in=divisao_ids)
+                divisoes_para_apagar.delete()
+                messages.success(request, 'Divisões excluídas com sucesso!')
+            else:
+                messages.error(request, 'Nenhuma divisão selecionada para exclusão.')
+
+            # Não precisamos recarregar o formulário de divisão, pois já o inicializamos
+            return redirect('editar_divisoes', grupo_id=grupo.id, evento_id=evento.id)
+
+        # Processo para adicionar ou editar a divisão
+        else:
+            divisao_form = DivisaoForm(request.POST, grupo_id=grupo.id)
+            if divisao_form.is_valid():
+                divisao_form.save()
+                messages.success(request, 'Divisão salva com sucesso!')
+                return redirect('editar_divisoes', grupo_id=grupo.id, evento_id=evento.id)
+
+    # Se o método for GET ou após uma submissão, o formulário será renderizado com a instância
+    return render(request, 'html/editar_divisoes.html', {
+        'grupo': grupo,
+        'evento': evento,
+        'divisoes': divisoes,
+        'modalidades': modalidades,
+        'divisao_form': divisao_form,
+    })
+
 
 @login_required(login_url='login')
 def criar_evento(request):
@@ -371,3 +465,9 @@ def gerenciar(request):
         
      return redirect('user')
 
+
+
+@login_required(login_url='login')
+def inscricao(request, evento_id, grupo_id):
+    
+    return render(request, 'html/inscricao.html')
