@@ -17,11 +17,7 @@ import json
 
 
 
-
-
-
 @login_required(login_url='login')
-
 def evento_detalhes(request, evento_id):
     # Verificar se o usuário tem permissão de administrador
     if not is_admin_esportivo(request.user):

@@ -131,6 +131,7 @@ class Pagamentos(models.Model):
     comprovante = models.FileField(upload_to='comprovantes/', blank=True, null=True)
     equipe = models.ForeignKey('Equipe', on_delete=models.CASCADE)
 
+
 class Equipe(models.Model):
     nome = models.CharField(max_length=100)
     representante_esportivo = models.ForeignKey(RepresentanteEsportivo, on_delete=models.CASCADE)
