@@ -41,7 +41,9 @@
 
     {% if evento.data_fim_inscricao|date:"Y-m-d" > now|date:"Y-m-d" %}
         <div style="text-align: right; margin-right:10px;">
+            <a href="{% url 'inscricao' evento.id grupo.id %}">
             <button>Inscrever-se</button>
+            </a>
         </div>
     {% else %}
         <h1>A inscrição foi encerrada.</h1>

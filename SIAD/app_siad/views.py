@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse
-from .forms import RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
-from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao
+from django.http import FileResponse, HttpResponse
+from .forms import AtletaForm, RepresentanteLoginForm, RepresentanteRegistroForm, NoticiaForm, EditalForm,EdicaoEventoForm, GrupoForm, ModalidadeForm, DivisaoForm
+from .models import Noticia, EdicaoEvento, Grupo, EventoOriginal, Modalidade, Divisao, AtletaGrupoDivisao, RepresentanteEsportivo, Atleta
 import logging
 import os
 from django.conf import settings
@@ -13,6 +13,69 @@ from django.utils import timezone
 import shutil
 import json
 
+
+@login_required(login_url="login")
+def inscrever_divisoes(request, evento_id, grupo_id):
+    
+    return render(request, 'html/inscrever_divisoes.html')
+
+@login_required(login_url="login")
+def inscricao(request, evento_id, grupo_id):
+    grupo = get_object_or_404(Grupo, id=grupo_id)
+    evento = get_object_or_404(EdicaoEvento, id=evento_id)
+    representante = get_object_or_404(RepresentanteEsportivo, user=request.user)
+    
+    # Filtra os atletas relacionados ao grupo e representante
+    atleta_grupo_divisoes = AtletaGrupoDivisao.objects.filter(grupo=grupo, representante_esportivo=representante)
+    atletas = [ag.atleta for ag in atleta_grupo_divisoes]  # Extrai os objetos Atleta
+    
+    # Instancia o formulário
+    atleta_form = AtletaForm(request.POST or None, request.FILES or None)
+    
+    if request.method == "POST":
+        # Verifica se o botão de exclusão foi pressionado
+        if 'action' in request.POST and request.POST['action'] == 'delete':
+            atleta_ids = request.POST.getlist('atletas')  # Obtém os IDs dos atletas selecionados
+            print("Atletas IDs recebidos:", atleta_ids)  # Verifica os IDs recebidos
+
+            if atleta_ids:
+                # Converte os IDs para inteiros (caso necessário)
+                atleta_ids = [int(id) for id in atleta_ids]
+                # Filtra os atletas a serem excluídos, levando em consideração o grupo e o representante
+                atletas_para_apagar = Atleta.objects.filter(id__in=atleta_ids)
+                
+                # Exclui os atletas
+                if atletas_para_apagar.exists():
+                    atletas_para_apagar.delete()
+                    messages.success(request, 'Atletas excluídos com sucesso!')
+                else:
+                    print("Nenhum atleta encontrado para excluir.")
+                    messages.error(request, 'Nenhum atleta selecionado ou encontrado para exclusão.')
+            else:
+                print("Nenhum atleta selecionado.")
+                messages.error(request, 'Nenhum atleta selecionado para exclusão.')
+
+            return redirect('inscricao', grupo_id=grupo.id, evento_id=evento.id)
+
+        # Processo para adicionar ou editar o atleta
+        elif atleta_form.is_valid():
+            novo_atleta = atleta_form.save(commit=False)
+            novo_atleta.save()
+
+            # Cria a relação entre Atleta, Grupo e Divisão
+            AtletaGrupoDivisao.objects.create(
+                atleta=novo_atleta,
+                grupo=grupo,
+                representante_esportivo=representante
+            )
+            return redirect('inscricao', evento_id=evento.id, grupo_id=grupo.id)
+
+    return render(request, 'html/inscricao.html', {
+        'grupo': grupo,
+        'evento': evento,
+        'atletas': atletas,
+        'atleta_form': atleta_form,
+    })
 
 
 
@@ -463,7 +526,3 @@ def gerenciar(request):
 
 
 
-@login_required(login_url='login')
-def inscricao(request, evento_id, grupo_id):
-    
-    return render(request, 'html/inscricao.html')

@@ -7,45 +7,15 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-class InscricaoDivisaoForm(forms.Form):
-    atleta = forms.ModelChoiceField(queryset=Atleta.objects.none(), label='Atleta')
-    divisao = forms.ModelChoiceField(queryset=Divisao.objects.none(), label='Divisão')
 
-    def __init__(self, *args, **kwargs):
-        grupo_id = kwargs.pop('grupo_id', None)
-        super().__init__(*args, **kwargs)
-
-        if grupo_id:
-            
-            self.fields['atleta'].queryset = Atleta.objects.filter(
-                atletagrupodivisao__grupo__id=grupo_id
-            ).distinct()
-
-
-            self.fields['divisao'].queryset = Divisao.objects.filter(
-                modalidade__edicao_evento__grupos__id=grupo_id
-            ).distinct()
-
-
-
-class AtletaDivisaoForm(forms.Form):
-    atletas = forms.ModelMultipleChoiceField(
-        queryset=Atleta.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        label='Atletas'
-    )
 
 class AtletaForm(forms.ModelForm):
     class Meta:
         model = Atleta
         fields = ['nome', 'nascimento', 'rg', 'cpf', 'comprovante_matricula']
-    
-    def clean_cpf(self):
-        cpf = self.cleaned_data.get('cpf')
-        if Atleta.objects.filter(cpf=cpf).exists():
-            raise forms.ValidationError("Já existe um atleta com este CPF.")
-        return cpf
 
+
+        
 class EditalForm(forms.ModelForm):
     class Meta:
         model = Edital
@@ -65,6 +35,19 @@ class DivisaoForm(forms.ModelForm):
     # Campo oculto para associar a divisão ao grupo
     grupo_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
+    def clean(self):
+        cleaned_data = super().clean()
+
+        min_atleta = cleaned_data.get('minAtleta')
+        max_atleta = cleaned_data.get('maxAtleta')
+
+        # Verifica se maxAtleta é maior que minAtleta
+        if min_atleta is not None and max_atleta is not None:
+            if max_atleta <= min_atleta:
+                raise forms.ValidationError("O número máximo de atletas deve ser maior que o número mínimo.")
+
+        return cleaned_data
+    
     def __init__(self, *args, **kwargs):
         grupo_id = kwargs.pop('grupo_id', None)
         super().__init__(*args, **kwargs)

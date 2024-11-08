@@ -36,8 +36,9 @@
         {% endfor %}
       </tbody>
     </table>
-
-    <button type="submit" name="action" value="delete" class="btn btn-danger">Excluir Divisões Selecionadas</button>
+    {%if divisoes%}
+      <button type="submit" name="action" value="delete" class="btn btn-danger">Excluir Divisões Selecionadas</button>
+    {%endif%}
   </form>
 
   <h3 style="margin-top:20px;">Adicionar Nova Modalidade</h3>

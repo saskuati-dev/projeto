@@ -1,10 +1,81 @@
-{% extends "base/base.html" %}
-{% block title %}Inscrever-se em: {{ grupo.nome }}{% endblock %}
+{% extends 'base/base.html' %}
 
 {% block userinfo %}
+<div class="container">
+    <h1>Inscrever Atletas no Grupo: {{ grupo.nome }}</h1>
 
+    <h2>Atletas do Representante</h2>
+    <form method="POST" action="{% url 'inscricao' evento.id grupo.id %}">
+        {% csrf_token %}
+        
+        <!-- Tabela com atletas inscritos -->
+        <table border="1" cellpadding="4" cellspacing="1">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Nome</th>
+                    <th>Documento</th>
+                    <th>Divisões Inscritas(0-2)</th>
+                    <th>Comprovante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for atleta in atletas %}
+                <tr>
+                    <td><input type="checkbox" name="atletas" value="{{ atleta.id }}"></td>
+                    <td>{{ atleta.nome }}</td>
+                    <td>{{ atleta.cpf }}</td>
+                    <td>
+                        {% with divisao_count=atleta.divisoes.count %}
+                        {% if atleta.divisoes.count == null %}
+                            0 
+                        {% else %}
+                            {{ atleta.divisoes.count }} 
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% if atleta.comprovante_matricula %}
+                            <a href="{{ atleta.comprovante_matricula.url }}" target="_blank">Ver Comprovante</a>
+                        {% else %}
+                            Nenhum comprovante disponível
+                        {% endif %}
+                    </td>
+                    
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">Nenhum atleta encontrado para este grupo.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
+        <div style="text-align: right; margin-right:20px;">
+            <button type="button" onclick="window.location.href='{% url 'inscrever_divisoes' evento.id grupo.id %}'">Inscrever-se nas Divisões</button>
+        </div>
 
+        {%if atletas%}
+            <button type="submit" name="action" value="delete" class="btn btn-danger" style="margin-top: 20px;">
+                Excluir Atletas Selecionados
+            </button>
+        {%endif%}
+    </form>
 
+    <h3 style="margin-top:20px;" class="gaveta-header">Adicionar Novo Atleta</h3>
+        <div class="gaveta-content">
+            <form method="POST" action="{% url 'inscricao' evento.id grupo.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-evento">
+                    <!-- Renderiza o formulário do Atleta -->
+                    {{ atleta_form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-primary">Adicionar Atleta</button>
+            </form>
+        </div>
+    
 
-{%endblock%}
+    
+
+</div>
+{% endblock %}

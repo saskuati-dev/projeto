@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 import os
 import datetime
+from django.utils.crypto import get_random_string
+from django.utils.timezone import now
+
 
 
 class Noticia(models.Model):
@@ -68,19 +71,31 @@ class Divisao(models.Model):
     def __str__(self):
         return self.tipo_divisao
 
+
+def atleta_comprovante_upload_to(instance, filename):
+    """
+    Função para gerar um nome único para o arquivo.
+    O nome do arquivo será baseado no ID do atleta e o timestamp.
+    """
+    extension = filename.split('.')[-1]
+    unique_filename = f"{instance.id}_{now().strftime('%Y%m%d%H%M%S')}_{get_random_string(8)}.{extension}"
+    return os.path.join('comprovantes_matricula', unique_filename)
+
 class Atleta(models.Model):
     nome = models.CharField(max_length=100)
     nascimento = models.DateField()
     rg = models.CharField(max_length=20)
     cpf = models.CharField(max_length=11, unique=True)
-    comprovante_matricula = models.FileField(upload_to='comprovantes_matricula/')
+    comprovante_matricula = models.FileField(upload_to=atleta_comprovante_upload_to, blank=False, null=False)
    
+
 
 class Grupo(models.Model):
     nome = models.CharField(max_length=100)
     descricao_grupo = models.TextField()
     taxa = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     edicao_evento = models.ForeignKey(EdicaoEvento, related_name='grupos', on_delete=models.CASCADE)
+    representante_esportivo = models.ForeignKey('RepresentanteEsportivo', on_delete=models.CASCADE, default=1)  # Adicionando a chave estrangeira para RepresentanteEsportivo
 
     def __str__(self):
         return self.nome
@@ -106,11 +121,16 @@ class Grupo(models.Model):
         
         return divisao_atletas
 
+
 class AtletaGrupoDivisao(models.Model):
     atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE)
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
-    divisao = models.ForeignKey(Divisao, on_delete=models.CASCADE)
-
+    divisao = models.ForeignKey(Divisao, null=True, blank=True,on_delete=models.CASCADE)
+    representante_esportivo = models.ForeignKey('RepresentanteEsportivo', on_delete=models.CASCADE, default=1)  # Novo campo
+    
+    
+    def __str__(self):
+        return f"{self.atleta.nome} no grupo {self.grupo.nome}"
 
 class RepresentanteEsportivo(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
